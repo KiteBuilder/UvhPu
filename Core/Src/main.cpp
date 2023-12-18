@@ -66,7 +66,13 @@ static void MX_TIM3_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+static volatile timeMs_t sysTickUptime = 0;
+static volatile uint32_t sysTickValStamp = 0;
 
+timeUs_t currentTimeUs = 0, previousTimeUs = 0;
+uint32_t usTicks = 0;
+
+timeUs_t micros(void);
 /* USER CODE END 0 */
 
 /**
@@ -92,7 +98,7 @@ int main(void)
   SystemClock_Config();
 
   /* USER CODE BEGIN SysInit */
-
+  usTicks = SystemCoreClock / 1000000;
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -118,6 +124,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+
+      currentTimeUs = micros();
+      //float dT = (currentTimeUs - previousTimeUs) * 1e-6;
+      previousTimeUs = currentTimeUs;
+
 	  exec();
 
     /* USER CODE END WHILE */
@@ -554,7 +565,23 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+  * @brief
+  * @retval None
+  */
+timeUs_t micros(void)
+{
+    register uint32_t ms, cycle_cnt;
 
+    do
+    {
+        ms = sysTickUptime;
+        cycle_cnt = SysTick->VAL;
+    } while (ms != sysTickUptime || cycle_cnt > sysTickValStamp);
+
+    const uint32_t partial = (usTicks * 1000U - cycle_cnt) / usTicks;
+    return ((timeUs_t)ms * 1000LL) + ((timeUs_t)partial);
+}
 /* USER CODE END 4 */
 
 /**
@@ -572,6 +599,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM2) {
     HAL_IncTick();
+
+    ATOMIC_BLOCK(NVIC_PRIO_MAX)
+    {
+        sysTickUptime++;
+        sysTickValStamp = SysTick->VAL;
+        (void)(SysTick->CTRL);
+    }
   }
   /* USER CODE BEGIN Callback 1 */
   else if (htim->Instance == TIM3) {
