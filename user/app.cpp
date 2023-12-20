@@ -1,7 +1,8 @@
 #include "app.h"
 #include "iocan.h"
 #include "Device.h"
-
+#include "time.h"
+#include "atomic.h"
 #include <b57861s103.h>
 
 extern CAN_HandleTypeDef hcan;
@@ -20,8 +21,16 @@ adc_t adcTemp   = {&hsdadc1, 6};	//SDADC_CHANNEL_6	PB0
 adc_t adcVLoad 	= {&hsdadc3, 7};	//SDADC_CHANNEL_7
 adc_t adcIMon 	= {&hsdadc1, 4};	//SDADC_CHANNEL_4	reserve current
 
+timeUs_t currentTimeUs = 0, previousTimeUs = 0;
+
 void initialization()
 {
+
+    ATOMIC_BLOCK(NVIC_PRIO_MAX)
+    {
+        usTicks = SystemCoreClock / 1000000;
+    }
+
 	dev.info().flags.wakeUpHOLD = HOLD_READ();		//from autopilot
 	dev.info().flags.wakeUpPB = PB_EN_SIG_READ();	//from button
 	dev.info().eBat = 0;
@@ -43,8 +52,13 @@ void initialization()
 	else dev.info().flags.faultVbatVLoad = true;
 }
 
+
 void exec()
 {
+    currentTimeUs = micros();
+    float dT = currentTimeUs - previousTimeUs;
+    previousTimeUs = currentTimeUs;
+
 	dev.info().flags.faultLTC = FAULT_READ();
 	dev.info().flags.wakeUpHOLD = HOLD_READ();
 	dev.info().flags.wakeUpPB = PB_EN_SIG_READ();
@@ -111,6 +125,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 		Protocol::parceData((Command)cmd, dev.rxData(), dev.config());
 }
 
+
 void HAL_SDADC_InjectedConvCpltCallback(SDADC_HandleTypeDef* hsdadc)
 {
 	uint32_t channel;
@@ -167,4 +182,3 @@ void onTim3Triggered()
 	if(!dev.info().flags.faultVbatVLoad)
 		dev.calculateBatCE();
 }
-
