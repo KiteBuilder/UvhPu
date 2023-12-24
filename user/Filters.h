@@ -4,25 +4,33 @@
 
 class PT1Filter {
 public:
-    PT1Filter(): state(0), RC(0), dT(0), alpha(0)
+    PT1Filter()
     {
 
     }
 
     virtual ~PT1Filter();
 
+
+    bool isFirstLoad() { return first_load; }
     void FilterInit(float f_cut, float dT);
+    void FilterInitRC(float tau, float dT);
+    void FilterSetTimeConstant(float tau);
+    void FilterSetVal(float val);
+
     float FilterApply(float input);
     float FilterApply(float input, float dT);
+    float FilterApply(float input, float dT, float RC);
 
 private:
-    float state;
-    float RC;
-    float dT;
-    float alpha;
+    bool first_load = true;
+
+    float ft_state = 0;
+    float ft_RC = 0;
+    float ft_dT = 0;
+    float ft_alpha = 0;
 
     float ComputeRC(const float f_cut);
-    void FilterInitRC(float tau, float dT);
 };
 
 #endif /* FILTERS_H_ */

@@ -4,6 +4,8 @@
 #include "Protocol.h"
 #include "Flash.h"
 #include "def_ports.h"
+#include "time.h"
+#include "Filters.h"
 
 
 #define PORT_JUMPER		GPIOB
@@ -13,6 +15,11 @@
 #define PIN_JUMPER3		GPIO_PIN_6
 
 #define R_SHUNT(flag)	(flag ? 0.0005 : 0.00025)
+#define R_DIV1 60400
+#define R_DIV2 3600
+
+#define VBATT_LPF_FREQ 0.5 //Hz
+#define IBATT_LPF_FREQ 0.5 //Hz
 
 class Device {
 
@@ -29,7 +36,9 @@ public:
 	void saveConfig();
 	void convertAdcData();
 	bool checkVbatVload();
-	void calculateBatCE();
+	void calculateBatConsumption(float delta_time);
+	void calculateBatRes(float delta_time);
+	void UpdateButtery(timeUs_t currentTimeUs);
 
 private:
 	Flash m_flash;
@@ -42,6 +51,22 @@ private:
 
 	const float vRef = 3.0;
 	const float vBias = 1.5;
+
+    //parameters snapshot, gotten from the m_info
+	float iBat = 0; //averaged current snapshot
+	float vBat = 0; //averaged voltage snapshot
+
+    // resistance estimate
+    float iBat_max = 0;   // maximum current since start-up
+    float vBat_ref = 0;   // voltage used for maximum resistance calculation
+    float iBat_ref = 0;   // current used for maximum resistance calculation
+
+    //filters
+    PT1Filter vBatFilter;
+    PT1Filter iBatFilter;
+    float iBat_filt = 0;  // filtered current
+    float vBat_filt = 0;  // filtered voltage
+    timeUs_t previousTimeUs = 0;  // system time of last resistance estimate update
 };
 
 #endif /* DEVICE_H_ */

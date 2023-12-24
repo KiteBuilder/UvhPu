@@ -3,6 +3,7 @@
 
 #include "stm32f3xx_hal.h"
 #include <string.h>
+#include <math.h>
 
 #define AVRG_SIZE  20
 
@@ -15,12 +16,10 @@ struct average_t{
 	float val;
 	float buf[AVRG_SIZE];
 	uint8_t cnt = 0;
-	bool fFull = false;
 
 	void clear(){
 		val = 0;
 		cnt = 0;
-		fFull = false;
 	}
 };
 
@@ -45,8 +44,9 @@ struct info_t{
 
 	float cBat;
 	float eBat;
+	float resBat;
 
-	int16_t iBatOffset = 0;
+	uint16_t iBatOffset = 0;
 
 	uint8_t fullBatCnt = 0;
 	bool fullBat = false;
@@ -73,8 +73,8 @@ struct config_t{	//write to flash
 	float iMonB = 0;
 	float tempBatK = 1;
 	float tempBatB = 0;
-	uint32_t cInitial = 100000;		//100 Ah
-	uint32_t eInitial = 5000000;	//5 kWh
+	uint32_t cInitial = 100000;		//in mAh = 100 Ah
+	uint32_t eInitial = 5000000;	//in Wh = 5 kWh
 
 	float vLow = 2.5;	//* 6
 	float vMax = 4.2;	//* 6
@@ -82,8 +82,41 @@ struct config_t{	//write to flash
 	float iLowCharge = 0.2;
 	float tempBatMax = 60;
 
-	int16_t iBatOffset = 16787;
+	uint16_t iBatOffset = 16787;
 };
 #pragma pack(pop)
+
+//*****************************************************************************
+//Here located float primitives
+//*****************************************************************************
+
+#define FLT_EPSILON      1.192092896e-07F        // smallest such that 1.0+FLT_EPSILON != 1.0
+
+/*
+ * @brief: Check whether a float is zero
+ */
+inline bool is_zero(const float x)
+{
+    return fabsf(x) < FLT_EPSILON;
+}
+
+/*
+ * @brief: Check whether a float is greater than zero
+ */
+inline bool is_positive(const float x)
+{
+    return (x >= FLT_EPSILON);
+}
+
+// Convert amps milliseconds to milliamp hours
+// Amp.millisec to milliAmp.hour = 1/1E3(ms->s) * 1/3600(s->hr) * 1000(A->mA)
+#define AMS_TO_MAH 0.000277777778f
+
+// Amps microseconds to milliamp hours
+#define AUS_TO_MAH 0.0000002778f
+
+// Amps seconds to milliamp hours
+#define AS_TO_MAH 0.2778f
+
 
 #endif /* TYPES_H_ */

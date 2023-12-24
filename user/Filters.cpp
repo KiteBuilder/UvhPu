@@ -29,10 +29,10 @@ float PT1Filter::ComputeRC(const float f_cut)
   */
 void PT1Filter::FilterInitRC(float tau, float dT)
 {
-    state = 0.0f;
-    RC = tau;
-    this->dT = dT;
-    alpha = dT / (RC + dT);
+    ft_state = 0.0f;
+    ft_RC = tau;
+    ft_dT = dT;
+    ft_alpha = ft_dT / (ft_RC + ft_dT);
 }
 
 /**
@@ -47,14 +47,26 @@ void PT1Filter::FilterInit(float f_cut, float dT)
 }
 
 /**
+  * @brief Set time constant tau. RC=tau
+  * @param f_cut: cutoff frequency in Hz
+  *        dT : time delta, in microseconds, between two measurements
+  * @retval None
+  */
+void PT1Filter::FilterSetTimeConstant(float tau)
+{
+    ft_RC = tau;
+}
+
+/**
   * @brief Apply filter to the measured value
   * @param input: measured value
   * @retval filtered value
   */
 float  PT1Filter::FilterApply(float input)
 {
-    state = state + alpha * (input - state);
-    return state;
+    first_load = false;
+    ft_state = ft_state + ft_alpha * (input - ft_state);
+    return ft_state;
 }
 
 /**
@@ -66,8 +78,41 @@ float  PT1Filter::FilterApply(float input)
   */
 float  PT1Filter::FilterApply(float input, float dT)
 {
-    this->dT = dT;
-    alpha = dT / (RC + dT);
-    state = state + alpha * (input - state);
-    return state;
+    first_load = false;
+    ft_dT = dT;
+    ft_alpha = ft_dT / (ft_RC + ft_dT);
+    ft_state = ft_state + ft_alpha * (input - ft_state);
+    return ft_state;
+}
+
+/**
+  * @brief Apply filter to the measured value.
+  *        Additional dT parameter gives us more room if fT not a constant
+  * @param input: measured value
+  *        dT: time delta, in microseconds, between two measurements
+  *        RC: circuit time constant
+  * @retval input: measured value
+  */
+float  PT1Filter::FilterApply(float input, float dT, float fcut)
+{
+    first_load = false;
+    if(!ft_RC)
+    {
+        ft_RC = ComputeRC(fcut);
+    }
+
+    ft_dT = dT;
+    ft_alpha = ft_dT / (ft_RC + ft_dT);
+    ft_state = ft_state + ft_alpha * (input - ft_state);
+    return ft_state;
+}
+
+/**
+  * @brief Set preloaded state value
+  * @param val : new state value
+  * @retval None
+  */
+void PT1Filter::FilterSetVal(float val)
+{
+    ft_state = val;
 }

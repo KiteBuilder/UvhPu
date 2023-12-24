@@ -40,7 +40,8 @@ timeUs_t microsISR(void)
 {
     register uint32_t ms, pending, cycle_cnt;
 
-    ATOMIC_BLOCK(NVIC_PRIO_MAX) {
+    ATOMIC_BLOCK(NVIC_PRIO_MAX)
+    {
         cycle_cnt = SysTick->VAL;
 
         if (SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) {

@@ -49,7 +49,7 @@ task_t tasks[TASK_COUNT] = {
         [TASK_POWER] = {
                 .name = "POWER",
                 .taskHandler = taskPOWER,
-                .taskPeriod = TASK_PERIOD_MS(20), //20ms, 50Hz
+                .taskPeriod = TASK_PERIOD_MS(20),//20ms, 50Hz
                 .taskEnabled = false,
         },
 
@@ -84,6 +84,11 @@ task_t tasks[TASK_COUNT] = {
 
 TasksQueue taskQueue(tasks, TASK_COUNT);
 
+/**
+  * @brief
+  * @param None
+  * @retval None
+  */
 void initialization()
 {
 
@@ -134,14 +139,22 @@ void initialization()
     }
 }
 
-
+/**
+  * @brief
+  * @param None
+  * @retval None
+  */
 void exec()
 {
     taskQueue.scheduler();
 }
 
 //----------------------Callback--------------------------
-
+/**
+  * @brief
+  * @param None
+  * @retval None
+  */
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
 	uint32_t cmd;
@@ -172,6 +185,11 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 	}
 }
 
+/**
+  * @brief
+  * @param None
+  * @retval None
+  */
 void HAL_SDADC_InjectedConvCpltCallback(SDADC_HandleTypeDef* hsdadc)
 {
 	uint32_t channel;
@@ -180,21 +198,26 @@ void HAL_SDADC_InjectedConvCpltCallback(SDADC_HandleTypeDef* hsdadc)
 	if(hsdadc == &hsdadc1){
 		val = HAL_SDADC_InjectedGetValue(hsdadc, &channel);
 		if(channel == adcIBat.channel)
-			Converter::addToAverage(dev.info().iBat, val);
+			Converter::addToAverage(dev.info().iBat, (float)val);
 		else if(channel == adcIMon.channel)
-			Converter::addToAverage(dev.info().iMon, val);
+			Converter::addToAverage(dev.info().iMon, (float)val);
 		else if(channel == adcTemp.channel)
-			Converter::addToAverage(dev.info().tempBat, val);
+			Converter::addToAverage(dev.info().tempBat, (float)val);
 	}
 	else if(hsdadc == &hsdadc3){
 		val = HAL_SDADC_InjectedGetValue(hsdadc, &channel);
 		if(channel == adcVLoad.channel)
-			Converter::addToAverage(dev.info().vOut, val);
+			Converter::addToAverage(dev.info().vOut, (float)val);
 		else if(channel == adcVBat.channel)
-			Converter::addToAverage(dev.info().vBat, val);
+			Converter::addToAverage(dev.info().vBat, (float)val);
 	}
 }
 
+/**
+  * @brief
+  * @param None
+  * @retval None
+  */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	//если  PB_EN_SIG == 0 тоже выключать питание???
@@ -210,8 +233,12 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	}
 }
 
-// 1 second
-void onTim3Triggered()
+/**
+  * @brief
+  * @param None
+  * @retval None
+  */
+void onTim3Triggered() // 1 second
 {
 
 }
@@ -238,8 +265,6 @@ void taskCAN(timeUs_t currentTimeUs)
 
     if(!dev.info().flags.faultVbatVLoad)
     {
-        dev.convertAdcData();
-
         memset(dev.txData(), 0, CAN_PACK_SIZE);
         Protocol::addSFloat(dev.txData(0), dev.info().vBat.val);
         Protocol::addFloat(dev.txData(2), dev.info().iBat.val);
@@ -267,22 +292,24 @@ void taskCAN(timeUs_t currentTimeUs)
   */
 void taskPOWER(timeUs_t currentTimeUs)
 {
-    UNUSED(currentTimeUs);
-
-    if(dev.info().vBat.val >= dev.config().vMax && dev.info().iBat.val < dev.config().iFullCharge)
+    if (!dev.info().flags.faultVbatVLoad)
     {
-        if(!dev.info().fullBat && dev.info().fullBatCnt++ > 10){
+        dev.convertAdcData();
+        dev.UpdateButtery(currentTimeUs);
+    }
+
+
+    if( dev.info().vBat.val >= dev.config().vMax && dev.info().iBat.val < dev.config().iFullCharge)
+    {
+        if (!dev.info().fullBat && dev.info().fullBatCnt++ > 10){
             dev.info().fullBat = true;
             dev.info().fullBatCnt = 0;
         }
     }
-    else{
+    else {
         dev.info().fullBat = false;
         dev.info().fullBatCnt = 0;
     }
-
-    if(!dev.info().flags.faultVbatVLoad)
-        dev.calculateBatCE();
 }
 
 /**
