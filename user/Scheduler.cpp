@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include "Scheduler.h"
-#include "time.h"
 
 /**
   * @brief Constructor

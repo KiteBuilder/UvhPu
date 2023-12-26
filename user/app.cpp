@@ -7,10 +7,11 @@
 #include "Scheduler.h"
 
 extern CAN_HandleTypeDef hcan;
-
 extern SDADC_HandleTypeDef hsdadc1;
 extern SDADC_HandleTypeDef hsdadc3;
-
+#ifdef DEBUG_ENABLED
+    extern UART_HandleTypeDef huart1;
+#endif
 extern TIM_HandleTypeDef htim5;
 
 io_can can = {&hcan};//new io_can(&hcan);
@@ -73,13 +74,14 @@ task_t tasks[TASK_COUNT] = {
                 .taskPeriod = TASK_PERIOD_MS(500), //500 milliseconds, 2Hz
                 .taskEnabled = false,
         },
-
+#ifdef DEBUG_ENABLED
         [TASK_DEBUG] = {
                 .name = "DEBUG",
                 .taskHandler = taskDEBUG,
                 .taskPeriod = TASK_PERIOD_HZ(50), //50Hz, 20ms
                 .taskEnabled = false,
         }
+#endif
 };
 
 TasksQueue taskQueue(tasks, TASK_COUNT);
@@ -101,6 +103,7 @@ void initialization()
 	dev.info().flags.wakeUpPB = PB_EN_SIG_READ();	//from the button
 	dev.info().eBat = 0;
 	dev.info().cBat = 0;
+	dev.info().resBat = 0;
 
 	ADC_EN(GPIO_PIN_SET);
 	HAL_Delay(100);
@@ -123,7 +126,9 @@ void initialization()
 	taskQueue.taskEnable(TASK_ADC);
     taskQueue.taskEnable(TASK_POWER);
     taskQueue.taskEnable(TASK_FLAGS);
+#ifdef DEBUG_ENABLED
     taskQueue.taskEnable(TASK_DEBUG);
+#endif
 
     if (dev.info().flags.faultVbatVLoad == true)
     {
@@ -282,6 +287,11 @@ void taskCAN(timeUs_t currentTimeUs)
         Protocol::addFloat(dev.txData(0), dev.info().cBat);
         Protocol::addFloat(dev.txData(3), dev.info().eBat);
         can.send(dev.config().id + Command::Pack3, dev.txData(), CAN_PACK_SIZE);
+
+        memset(dev.txData(), 0, CAN_PACK_SIZE);
+        Protocol::addFloat(dev.txData(0), dev.info().resBat);
+        Protocol::addFloat(dev.txData(3), dev.info().cBat);
+        can.send(dev.config().id + Command::Pack3, dev.txData(), CAN_PACK_SIZE);
     }
 }
 
@@ -295,7 +305,7 @@ void taskPOWER(timeUs_t currentTimeUs)
     if (!dev.info().flags.faultVbatVLoad)
     {
         dev.convertAdcData();
-        dev.UpdateButtery(currentTimeUs);
+        dev.UpdateBattery(currentTimeUs);
     }
 
 
@@ -366,12 +376,86 @@ void taskFAULT_LED(timeUs_t currentTimeUs)
 
 }
 
+#ifdef DEBUG_ENABLED
+//*****************************************************************************
+//Here part for sending debug info with the UART
+//*****************************************************************************
+#define DLE 0x10
+#define ETX 0x03
+#define ID 0x01
+
+#define DEBUG_PACK_SIZE 64
+uint8_t debugBuff[DEBUG_PACK_SIZE];
+
+#define PACK_SIZE 5
+
+#pragma pack(push, 1)
+typedef union
+{
+    float flt;
+    uint8_t bt[sizeof(float)];
+} byte_float_t;
+#pragma pack(pop)
+
+byte_float_t debugPack[PACK_SIZE];
+
+bool f_TxReady = true;
+
 /**
-  * @brief
+  * @brief Debug task sends selected amount of values by the serial interface
+  *        and uses simple protocol that consists of next fields:
+  *        |DLE|ID|DATA|DLE|ETX| where DLE symbol in the DATA field
+  *        should be doubled
   * @param
   * @retval
   */
 void taskDEBUG(timeUs_t currentTimeUs)
 {
     UNUSED(currentTimeUs);
+
+    debugPack[0].flt = dev.info().iBat.val;
+    debugPack[1].flt = dev.info().vBat.val;
+    debugPack[2].flt = dev.info().cBat;
+    debugPack[3].flt = dev.info().eBat;
+    debugPack[4].flt = dev.info().resBat;
+
+    uint32_t n = 0;
+    debugBuff[n++] = DLE;
+    debugBuff[n++] = ID;
+
+    for (uint32_t i = 0; i < PACK_SIZE; i++)
+    {
+        for (uint32_t j = 0; j < sizeof(byte_float_t); j++)
+        {
+           debugBuff[n++] = debugPack[i].bt[j];
+
+           if (debugPack[i].bt[j] == DLE)
+           {
+               debugBuff[n++] = DLE;
+           }
+        }
+    }
+
+    debugBuff[n++] = DLE;
+    debugBuff[n++] = ETX;
+
+    do
+    {
+        continue;
+    }while(!f_TxReady);
+
+    f_TxReady = false;
+    HAL_UART_Transmit_IT(&huart1, debugBuff, n);
 }
+
+/**
+  * @brief
+  * @param
+  * @retval
+  */
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+    f_TxReady = true;
+}
+
+#endif

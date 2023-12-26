@@ -175,10 +175,10 @@ void Device::calculateBatRes(float delta_time)
   * @param curremtTime: current time in microseconds
   * @retval None
   */
-void Device::UpdateButtery(timeUs_t currentTimeUs)
+void Device::UpdateBattery(timeUs_t currentTimeUs)
 {
     iBat = m_info.iBat.val;
-    vBat = m_info.vBat.val;
+    vBat = m_info.vOut.val; //m_info.vBat.val;
 
     // calculate time since last update
     float delta_time = US2S(currentTimeUs - previousTimeUs);

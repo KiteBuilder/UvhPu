@@ -38,7 +38,7 @@ public:
 	bool checkVbatVload();
 	void calculateBatConsumption(float delta_time);
 	void calculateBatRes(float delta_time);
-	void UpdateButtery(timeUs_t currentTimeUs);
+	void UpdateBattery(timeUs_t currentTimeUs);
 
 private:
 	Flash m_flash;

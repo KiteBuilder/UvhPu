@@ -2,6 +2,7 @@
 #ifndef SCHEDULER_H_
 #define SCHEDULER_H_
 
+#include "app.h"
 #include "time.h"
 
 //List of task IDs
@@ -13,7 +14,9 @@ typedef enum
  TASK_FLAGS,
  TASK_FAULT,
  TASK_FAULT_LED,
+#ifdef DEBUG_ENABLED
  TASK_DEBUG,
+#endif
  TASK_COUNT //amount of tasks
 } taskId_e;
 

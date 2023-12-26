@@ -42,9 +42,9 @@ struct info_t{
 	int16_t pBat;
 	flags_t flags;
 
-	float cBat;
-	float eBat;
-	float resBat;
+	float cBat;   //battery power draw in mAh
+	float eBat;   //battery power draw in Wh
+	float resBat; //battery impedance
 
 	uint16_t iBatOffset = 0;
 

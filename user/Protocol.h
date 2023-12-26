@@ -11,6 +11,7 @@ enum Command : uint8_t {
 	Pack1 = 0x01,
     Pack2 = 0x02,
     Pack3 = 0x03,
+    Pack4 = 0x04,
 
 	ConfSave = 0x11,
 	ConfDevId = 0x12,

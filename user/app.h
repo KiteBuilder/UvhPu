@@ -8,5 +8,7 @@ void exec();
 
 void onTim3Triggered();
 
+#define DEBUG_ENABLED
+
 
 #endif /* APP_H_ */
