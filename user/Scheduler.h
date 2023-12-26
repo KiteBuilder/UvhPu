@@ -8,7 +8,7 @@
 //List of task IDs
 typedef enum
 {
- TASK_ADC = 0,
+ TASK_STROBE = 0,
  TASK_CAN,
  TASK_POWER,
  TASK_FLAGS,

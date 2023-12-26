@@ -6,8 +6,6 @@
 void initialization();
 void exec();
 
-void onTim3Triggered();
-
 #define DEBUG_ENABLED
 
 

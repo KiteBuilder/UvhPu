@@ -62,6 +62,10 @@
 #define PIN_LED_HEATER				GPIO_PIN_5
 #define LED_HEATER_SET(flag)	 	HAL_GPIO_WritePin(GPIO_LED_HEATER, PIN_LED_HEATER, flag)
 
+#define GPIO_LED_STROBE             GPIOA
+#define PIN_LED_STROBE              GPIO_PIN_3
+#define LED_STROBE_SET(flag)        HAL_GPIO_WritePin(GPIO_LED_STROBE, PIN_LED_STROBE, flag)
+
 //--------------------------------------------------------------------------------
 
 #endif /* DEF_PORTS_H_ */

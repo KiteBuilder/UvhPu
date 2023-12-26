@@ -12,7 +12,6 @@ extern SDADC_HandleTypeDef hsdadc3;
 #ifdef DEBUG_ENABLED
     extern UART_HandleTypeDef huart1;
 #endif
-extern TIM_HandleTypeDef htim5;
 
 io_can can = {&hcan};//new io_can(&hcan);
 Device dev;
@@ -23,7 +22,7 @@ adc_t adcTemp   = {&hsdadc1, 6};	//SDADC_CHANNEL_6	PB0
 adc_t adcVLoad 	= {&hsdadc3, 7};	//SDADC_CHANNEL_7
 adc_t adcIMon 	= {&hsdadc1, 4};	//SDADC_CHANNEL_4	reserve current
 
-void taskADC(timeUs_t);
+void taskSTROBE(timeUs_t);
 void taskCAN(timeUs_t);
 void taskPOWER(timeUs_t);
 void taskFLAGS(timeUs_t);
@@ -33,10 +32,10 @@ void taskDEBUG(timeUs_t);
 
 //Task array, consists of all scheduled tasks
 task_t tasks[TASK_COUNT] = {
-        [TASK_ADC] = {
-                .name = "ADC",
-                .taskHandler = taskADC,
-                .taskPeriod = TASK_PERIOD_US(500), //500 microseconds, 2KHz
+        [TASK_STROBE] = {
+                .name = "LED_STROBE",
+                .taskHandler = taskSTROBE,
+                .taskPeriod = TASK_PERIOD_US(1000), //1000 microseconds, 1KHz
                 .taskEnabled = false,
         },
 
@@ -123,7 +122,7 @@ void initialization()
 	    dev.info().flags.faultVbatVLoad = true;
 	}
 
-	taskQueue.taskEnable(TASK_ADC);
+	taskQueue.taskEnable(TASK_STROBE);
     taskQueue.taskEnable(TASK_POWER);
     taskQueue.taskEnable(TASK_FLAGS);
 #ifdef DEBUG_ENABLED
@@ -240,23 +239,30 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 
 /**
   * @brief
-  * @param None
-  * @retval None
-  */
-void onTim3Triggered() // 1 second
-{
-
-}
-
-/**
-  * @brief
   * @param
   * @retval
   */
-void taskADC(timeUs_t currentTimeUs)
+void taskSTROBE(timeUs_t currentTimeUs)
 {
-    UNUSED(currentTimeUs);
+    static uint32_t strbCnt = 0;
 
+    UNUSED(currentTimeUs);
+    switch (strbCnt)
+    {
+        case 0:
+            LED_STROBE_SET(GPIO_PIN_SET);
+            break;
+
+        case 50:
+            LED_STROBE_SET(GPIO_PIN_RESET);
+            break;
+
+        case 1000:
+            strbCnt = 0;
+            return;
+    }
+
+    ++strbCnt;
 }
 
 /**
