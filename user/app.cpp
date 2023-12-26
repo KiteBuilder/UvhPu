@@ -296,7 +296,7 @@ void taskCAN(timeUs_t currentTimeUs)
 
         memset(dev.txData(), 0, CAN_PACK_SIZE);
         Protocol::addFloat(dev.txData(0), dev.info().resBat);
-        Protocol::addFloat(dev.txData(3), dev.info().cBat);
+        Protocol::addFloat(dev.txData(3), dev.info().vRest);
         can.send(dev.config().id + Command::Pack3, dev.txData(), CAN_PACK_SIZE);
     }
 }

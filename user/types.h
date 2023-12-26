@@ -45,7 +45,8 @@ struct info_t{
 	float cBat;   //battery power draw in mAh
 	float eBat;   //battery power draw in Wh
 	float resBat; //battery impedance
-
+	float vRest;  //voltage with sag removed based on current and resistance estimate in Volt
+	              //resting voltage, should always be greater or equal to the raw voltage
 	uint16_t iBatOffset = 0;
 
 	uint8_t fullBatCnt = 0;

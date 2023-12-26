@@ -200,4 +200,8 @@ void Device::UpdateBattery(timeUs_t currentTimeUs)
     //calculate battery impedance and power consumption
     calculateBatRes(delta_time);
     calculateBatConsumption(delta_time);
+
+    //Calculate the resting voltage
+    m_info.vRest = vBat + iBat *  m_info.resBat;
+    m_info.vRest = (m_info.vRest > vBat) ? m_info.vRest : vBat;
 }
