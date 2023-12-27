@@ -278,7 +278,7 @@ void taskCAN(timeUs_t currentTimeUs)
     {
         memset(dev.txData(), 0, CAN_PACK_SIZE);
         Protocol::addSFloat(dev.txData(0), dev.info().vBat.val);
-        Protocol::addFloat(dev.txData(2), dev.info().iBat.val);
+        Protocol::addFloat(dev.txData(2), dev.info().iBat.val * -1.0);
         Protocol::add2Bytes(dev.txData(6), (int16_t)(dev.info().iMon.val * 100));
         can.send(dev.config().id + Command::Pack1, dev.txData(), CAN_PACK_SIZE);
 
