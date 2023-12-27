@@ -44,22 +44,21 @@ void Device::saveConfig()
   */
 void Device::convertAdcData()
 {
-	float iBat = Converter::generateAverageVar(m_info.iBat); //- m_config.iBatOffset;
+	float iBat = Converter::generateAverageVar(m_info.iBat) - m_config.iBatOffset;
 	float iMon = Converter::generateAverageVar(m_info.iMon);
 	float vBat = Converter::generateAverageVar(m_info.vBat);
 	float vOut = Converter::generateAverageVar(m_info.vOut);
 	float tempBat = Converter::generateAverageVar(m_info.tempBat);
 
-	iBat = Converter::adcToVoltage(iBat, vRef, 0.25);	//0.25 for sigmadelta ADC to 16384 full range
-	iMon = Converter::adcToVoltage(iMon, vRef, 0.5);	//0.5  for sigmadelta ADC to 32768 full range
+	iBat = Converter::adcToVoltage(iBat, vRef, 0.5);	//Completely the Bullshit ---> 0.25 for sigmadelta ADC to 16384 full range
+	iMon = Converter::adcToVoltage(iMon, vRef, 0.5);	//True ---> 0.5  for sigmadelta ADC to 32768 full range
 	vBat = Converter::adcToVoltage(vBat, vRef, 0.5);
 	vOut = Converter::adcToVoltage(vOut, vRef, 0.5);
 	tempBat = Converter::adcToVoltage(tempBat, vRef, 0.5);
 
+	iBat = iBat / (20 * R_SHUNT(m_config.shunt));
+	//Next statement is valid if iBatOffset not subtracted and gain is 0.25
 	//iBat = (iBat - vBias) / (20 * R_SHUNT(m_config.shunt));
-	const float amp_offset = 15.1;
-	const float apm_per_volt = 0.4;
- 	iBat = ((iBat - vRef) / (20 * R_SHUNT(m_config.shunt)) - amp_offset) * apm_per_volt;
 	iMon = iMon / (20 * R_SHUNT(m_config.shunt));
 
 	m_info.iBat.val = m_config.iBatK * iBat + m_config.iBatB;
