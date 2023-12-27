@@ -47,6 +47,8 @@ struct info_t{
 	float resBat; //battery impedance
 	float vRest;  //voltage with sag removed based on current and resistance estimate in Volt
 	              //resting voltage, should always be greater or equal to the raw voltage
+	float vBatFilt; //Filtered voltage
+	float iBatFilt; //Filtered current
 	uint16_t iBatOffset = 0;
 
 	uint8_t fullBatCnt = 0;

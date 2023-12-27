@@ -57,7 +57,7 @@ void Device::convertAdcData()
 	tempBat = Converter::adcToVoltage(tempBat, vRef, 0.5);
 
 	iBat = iBat / (20 * R_SHUNT(m_config.shunt));
-	//Next statement is valid if iBatOffset not subtracted and gain is 0.25
+	//Next commented statement is valid if iBatOffset not subtracted and gain is 0.25
 	//iBat = (iBat - vBias) / (20 * R_SHUNT(m_config.shunt));
 	iMon = iMon / (20 * R_SHUNT(m_config.shunt));
 
@@ -195,6 +195,9 @@ void Device::UpdateBattery(timeUs_t currentTimeUs)
         iBatFilter.FilterSetVal(iBat);
     }
     iBat_filt = iBatFilter.FilterApply(iBat, delta_time, IBATT_LPF_FREQ);
+
+    m_info.iBatFilt = iBat_filt;
+    m_info.vBatFilt = vBat_filt;
 
     //calculate battery impedance and power consumption
     calculateBatRes(delta_time);
