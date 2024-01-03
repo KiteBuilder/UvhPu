@@ -108,7 +108,9 @@ void Device::calculateBatConsumption(float delta_time)
 {
     float drawn_mah = iBat_filt * delta_time * AS_TO_MAH;
     m_info.cBat += drawn_mah; //in mAh
-    m_info.eBat += 0.001 * drawn_mah * vBat_filt; //in Wh
+
+    float vHeatLosses = iBat_filt * m_info.resBat; //Voltage losses on the internal battery resistance
+    m_info.eBat += 0.001 * drawn_mah * (vBat_filt + vHeatLosses); //in Wh
 
     if (m_info.eBat > m_config.eInitial)
     {
@@ -131,11 +133,16 @@ void Device::calculateBatConsumption(float delta_time)
   */
 void Device::calculateBatRes(float delta_time)
 {
+    if (!is_positive(iBat))
+    {
+        return;
+    }
+
     // update maximum current seen since startup and protect against divide by zero
     iBat_max = (iBat_max > iBat) ? iBat_max : iBat;
     float iBat_delta = iBat - iBat_filt;
 
-    if (is_zero(iBat_delta))
+    if (is_zero(iBat_delta) || fabsf(iBat_delta) < CUR_DIFF)
     {
         return;
     }
@@ -147,12 +154,7 @@ void Device::calculateBatRes(float delta_time)
         iBat_ref = iBat;
     }
 
-    float res_alpha = 0.1 * fabsf(iBat - iBat_filt)/ iBat_max;
-
-    if (res_alpha > 1.0)
-    {
-        res_alpha = 1.0;
-    }
+    float res_alpha =  R_RC * fabsf(iBat_delta)/ iBat_max;
 
     float resBat_estimate = (vBat_filt - vBat)/iBat_delta;
 
@@ -165,6 +167,7 @@ void Device::calculateBatRes(float delta_time)
     if ((vBat_ref > vBat) && (iBat > iBat_ref))
     {
         float resBat_max = (vBat_ref - vBat) / (iBat - iBat_ref);
+        //correct current impedance if calculated maximum became lesser
         m_info.resBat =  (m_info.resBat < resBat_max) ? m_info.resBat : resBat_max;
     }
 }
