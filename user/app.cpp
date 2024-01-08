@@ -304,6 +304,11 @@ void taskCAN(timeUs_t currentTimeUs)
         Protocol::addFloat(dev.txData(0), dev.info().iBatFilt);
         Protocol::addFloat(dev.txData(3), dev.info().vBatFilt);
         can.send(dev.config().id + Command::Pack5, dev.txData(), CAN_PACK_SIZE);
+
+        memset(dev.txData(), 0, CAN_PACK_SIZE);
+        Protocol::addFloat(dev.txData(0), dev.info().cBatRest);
+        Protocol::addFloat(dev.txData(3), dev.config().cBatMod);
+        can.send(dev.config().id + Command::Pack6, dev.txData(), CAN_PACK_SIZE);
 #endif
     }
 }
@@ -400,7 +405,7 @@ void taskFAULT_LED(timeUs_t currentTimeUs)
 #define DEBUG_PACK_SIZE 64
 uint8_t debugBuff[DEBUG_PACK_SIZE];
 
-#define PACK_SIZE 5
+#define PACK_SIZE 9
 
 #pragma pack(push, 1)
 typedef union
@@ -431,6 +436,10 @@ void taskDEBUG(timeUs_t currentTimeUs)
     debugPack[2].flt = dev.info().cBat;
     debugPack[3].flt = dev.info().eBat;
     debugPack[4].flt = dev.info().resBat;
+    debugPack[5].flt = dev.info().cBatRest;
+    debugPack[6].flt = dev.config().cBatMod;
+    debugPack[7].flt = dev.info().vRest;
+    debugPack[8].flt = dev.info().tempBat.val;
 
     uint32_t n = 0;
     debugBuff[n++] = DLE;

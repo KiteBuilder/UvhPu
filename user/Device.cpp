@@ -4,6 +4,21 @@
 #include "types.h"
 #include "b57861s103.h"
 
+// x - temperature in Сelsius, y - relative capacity from 0.0 to 1.0
+const xy_t Device::TableTempCapacity[] = {
+        {-10.0 , 0.2 },
+        {-5.0  , 0.38},
+        { 0.0  , 0.5 },
+        { 5.0  , 0.66},
+        { 10.0 , 0.78},
+        { 15.0 , 0.85},
+        { 20.0 , 0.92},
+        { 25.0 , 1.0 },
+        { 30.0 , 0.98},
+        { 35.0 , 0.94},
+        { 40.0 , 0.9 },
+        { 45.0 , 0.86}};
+
 /**
   * @brief Constructor
   * @param None
@@ -15,6 +30,7 @@ Device::Device()
 	m_info.eBat = 0.0;
 	m_info.cBat = 0.0;
 	m_info.resBat = 0.0;
+	m_info.cBatRest = 0.0;
 }
 
 /**
@@ -108,9 +124,23 @@ void Device::calculateBatConsumption(float delta_time)
 {
     float drawn_mah = iBat_filt * delta_time * AS_TO_MAH;
     m_info.cBat += drawn_mah; //in mAh
+    m_config.cBatMod += fabs(drawn_mah); //accumulate module of energy
 
     float vHeatLosses = iBat_filt * m_info.resBat; //Voltage losses on the internal battery resistance
     m_info.eBat += 0.001 * drawn_mah * (vBat_filt + vHeatLosses); //in Wh
+
+    //Calculate the rest power in the battery taking to account current temperature and power that was consumed
+    //!!! This calculation takes approximately 650us and can be done preliminary in the beginning for whole
+    //temperature range that we need with requested temperature resolution.
+    //Suggest temperature step is 1.0 Celsius
+    float tempFactor = getCapTempFactor();
+    m_info.cBatRest = m_config.cInitial * tempFactor - m_info.cBat;
+
+    if (m_config.cBatMod >= m_config.cInitial * tempFactor * 2.0)
+    {
+        m_config.cBatMod = 0;
+        ++m_config.lifeCycles;
+    }
 
     if (m_info.eBat > m_config.eInitial)
     {
@@ -209,4 +239,145 @@ void Device::UpdateBattery(timeUs_t currentTimeUs)
     //Calculate the resting voltage
     m_info.vRest = vBat + iBat *  m_info.resBat;
     m_info.vRest = (m_info.vRest > vBat) ? m_info.vRest : vBat;
+}
+
+/**
+  * @brief Forward Newton Interpolation method
+  * @param x: x-axis value for which we have to find teh y value
+  *        xy_t: array with (x,y) control points
+  *        n: amount of control points
+  * @retval float: Calculated y value
+  */
+float Device::IntrpltNewtForward(float x, const xy_t *xy, uint32_t n)
+{
+    //Allocat memory for two dimensions array
+    float **y  = new float*[n];
+    for (uint32_t i = 0; i < n; i++)
+    {
+        y[i] = new float[n];
+    }
+
+    //To load allocated array with a f(x) values
+    for (uint32_t i = 0; i < n; i++)
+    {
+        y[i][0] = xy[i].y;
+    }
+
+    //Calculate the forward difference table
+    for (uint32_t i = 1; i < n; i++)
+    {
+        for (uint32_t j = 0; j < n-i; j++)
+        {
+            y[j][i] = y[j+1][i-1] - y[j][i-1];
+        }
+    }
+
+    //Interpolate
+    float sum = y[0][0];
+    float u = (x - xy[0].x) / (xy[1].x - xy[0].x);
+    float p = 1.0;
+    for (uint32_t i = 1; i < n; i++)
+    {
+        p *= (u - i + 1)/i;
+        sum = sum + p * y[0][i];
+    }
+
+    //To free allocated memory
+    for (uint32_t i = 0; i < n; i++) {
+        delete[] y[i];
+    }
+    delete[] y;
+
+    return sum;
+}
+
+/**
+  * @brief Backward Newton Interpolation method
+  * @param x: x-axis value for which we have to find teh y value
+  *        xy_t: array with (x,y) control points
+  *        n: amount of control points
+  * @retval float: Calculated y value
+  */
+float Device::IntrpltNewtBackward(float x, const xy_t* xy, uint32_t n)
+{
+    //Allocat memory for two dimensions array
+    float** y = new float* [n];
+    for (uint32_t i = 0; i < n; i++)
+    {
+        y[i] = new float[n];
+    }
+    //To load allocated array with a f(x) values
+    for (uint32_t i = 0; i < n; i++)
+    {
+        y[i][0] = xy[i].y;
+    }
+
+    //Calculate the backard difference table
+    for (uint32_t i = 1; i < n; i++)
+    {
+        for (uint32_t j = i; j < n; j++)
+        {
+            y[j][i] = y[j][i - 1] - y[j - 1][i - 1];
+        }
+    }
+
+    //Interpolate
+    float sum = y[n-1][0];
+    float u = (x - xy[n-1].x) / (xy[1].x - xy[0].x);
+    float p = 1.0;
+    for (uint32_t i = 1; i < n; i++)
+    {
+        p *= (u + i - 1) / i;
+        sum = sum + p * y[n - 1][i];
+    }
+
+    //To free allocated memory
+    for (uint32_t i = 0; i < n; i++) {
+        delete[] y[i];
+    }
+    delete[] y;
+
+    return sum;
+}
+
+/**
+  * @brief Newton interpolation method
+  * @param x: x-axis value for which we have to find teh y value
+  *        xy_t: array with (x,y) control points
+  *        n: amount of control points
+  * @retval float: Calculated y value
+  */
+float Device::IntrpltNewton(float x, const xy_t* xy, uint32_t n)
+{
+     uint32_t k = 0;
+    while (k < n)
+    {
+        if (x < xy[k].x)
+        {
+            break;
+        }
+        ++k;
+    }
+
+    float result = 0.0;
+    if (k < (n >> 1))
+    {
+        result = IntrpltNewtForward(x, xy, n);
+    }
+    else
+    {
+        result = IntrpltNewtBackward(x, xy, n);
+    }
+    return result;
+}
+
+/**
+  * @brief This method returns relative dependence of the battery capacity on the
+  *        measured  battery temperature -  from 0.0 to 1.0,
+  * @param
+  * @retval float: factor value from 0.0 to 1.0
+  */
+float Device::getCapTempFactor()
+{
+    return IntrpltNewton(m_info.tempBat.val, TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t));
 }

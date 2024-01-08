@@ -32,7 +32,8 @@ B57861s103::B57861s103() {
 B57861s103::~B57861s103() {
 	// TODO Auto-generated destructor stub
 }
-								//2490, tempVolt, 3.0
+
+//2490, tempVolt, 3.0
 float B57861s103::toTemp(float res_up, float v_res, float v_ref){
 	float r_t = res_up * v_res / (v_ref - v_res);
 	float temp = 0;

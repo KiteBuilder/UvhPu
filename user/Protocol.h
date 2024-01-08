@@ -13,6 +13,7 @@ enum Command : uint8_t {
     Pack3 = 0x03,
     Pack4 = 0x04,
     Pack5 = 0x05,
+    Pack6 = 0x06,
 
 	ConfSave = 0x11,
 	ConfDevId = 0x12,
@@ -25,6 +26,7 @@ enum Command : uint8_t {
 	ConfIcharge = 0x19,
 	ConfECinit = 0x1A,
 	Conf1 = 0x1B,
+	ConfNewBat = 0x1C,
 };
 
 class Protocol {

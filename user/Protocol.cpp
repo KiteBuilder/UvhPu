@@ -103,6 +103,11 @@ void Protocol::parceData(Command cmd, uint8_t* data, config_t& config)
 		memcpy(&config.tempBatMax, &data[3], 4);
 		break;
 
+    case Command::ConfNewBat:
+        memcpy(&config.lifeCycles, &data[0], 2);
+        config.cBatMod = 0;
+        break;
+
 	default: break;
 	}
 }

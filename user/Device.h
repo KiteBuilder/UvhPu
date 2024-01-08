@@ -25,6 +25,14 @@
                       //values(in Amps) when impedance calculation is possible
 #define R_RC 0.1 //Tau constant for the impedance  LPF filter
 
+#pragma pack(push, 1)
+typedef struct
+{
+    float x;
+    float y;
+} xy_t;
+#pragma pack(pop)
+
 class Device {
 
 public:
@@ -43,6 +51,7 @@ public:
 	void calculateBatConsumption(float delta_time);
 	void calculateBatRes(float delta_time);
 	void UpdateBattery(timeUs_t currentTimeUs);
+	float getCapTempFactor();
 
 private:
 	Flash m_flash;
@@ -71,6 +80,12 @@ private:
     float iBat_filt = 0;  // filtered current
     float vBat_filt = 0;  // filtered voltage
     timeUs_t previousTimeUs = 0;  // system time of last resistance estimate update
+
+    static const xy_t TableTempCapacity[];
+
+    float IntrpltNewtForward(float x, const xy_t *xy, uint32_t n);
+    float IntrpltNewtBackward(float x, const xy_t* xy, uint32_t n);
+    float IntrpltNewton(float x, const xy_t* xy, uint32_t n);
 };
 
 #endif /* DEVICE_H_ */

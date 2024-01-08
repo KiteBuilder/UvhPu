@@ -44,6 +44,7 @@ struct info_t{
 
 	float cBat;   //battery power draw in mAh
 	float eBat;   //battery power draw in Wh
+	float cBatRest; //Energy  that left in the battery
 	float resBat; //battery impedance
 	float vRest;  //voltage with sag removed based on current and resistance estimate in Volt
 	              //resting voltage, should always be greater or equal to the raw voltage
@@ -76,8 +77,8 @@ struct config_t{	//write to flash
 	float iMonB = 0;
 	float tempBatK = 1;
 	float tempBatB = 0;
-	uint32_t cInitial = 100000;		//in mAh = 100 Ah
-	uint32_t eInitial = 5000000;	//in Wh = 5 kWh
+	uint32_t cInitial = 1300;	//in mAh = 100 Ah
+	uint32_t eInitial = 32500;	//in mWh = 5 kWh
 
 	float vLow = 2.5;	//* 6
 	float vMax = 4.2;	//* 6
@@ -86,6 +87,10 @@ struct config_t{	//write to flash
 	float tempBatMax = 60;
 
 	uint16_t iBatOffset = 16787;
+
+	//these two variables should be set to 0 remotely in case of brand new battery
+    float cBatMod = 0.0; //Module of energy  that important to estimate the battery life cycle
+    uint16_t lifeCycles = 0; //life cycles counter that increments when cBatMod two times greater than cInitial
 };
 #pragma pack(pop)
 
