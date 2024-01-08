@@ -20,6 +20,7 @@
 
 #define VBATT_LPF_FREQ 0.5 //Hz
 #define IBATT_LPF_FREQ 0.5 //Hz
+#define TBATT_LPF_FREQ 1.0 //Hz
 
 #define CUR_DIFF 0.05 //minimal difference between not filtered and filtered current
                       //values(in Amps) when impedance calculation is possible
@@ -80,6 +81,8 @@ private:
     float iBat_filt = 0;  // filtered current
     float vBat_filt = 0;  // filtered voltage
     timeUs_t previousTimeUs = 0;  // system time of last resistance estimate update
+    PT1Filter tBatFilter;
+    float tBat_filt = 0; // filtered temperature
 
     static const xy_t TableTempCapacity[];
 

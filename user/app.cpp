@@ -291,23 +291,24 @@ void taskCAN(timeUs_t currentTimeUs)
 
         memset(dev.txData(), 0, CAN_PACK_SIZE);
         Protocol::addFloat(dev.txData(0), dev.info().cBat);
-        Protocol::addFloat(dev.txData(3), dev.info().eBat);
+        Protocol::addFloat(dev.txData(4), dev.info().eBat);
         can.send(dev.config().id + Command::Pack3, dev.txData(), CAN_PACK_SIZE);
 
 #ifdef DEBUG_ENABLED
         memset(dev.txData(), 0, CAN_PACK_SIZE);
         Protocol::addFloat(dev.txData(0), dev.info().resBat);
-        Protocol::addFloat(dev.txData(3), dev.info().vRest);
+        Protocol::addFloat(dev.txData(4), dev.info().vRest);
         can.send(dev.config().id + Command::Pack4, dev.txData(), CAN_PACK_SIZE);
 
         memset(dev.txData(), 0, CAN_PACK_SIZE);
         Protocol::addFloat(dev.txData(0), dev.info().iBatFilt);
-        Protocol::addFloat(dev.txData(3), dev.info().vBatFilt);
+        Protocol::addFloat(dev.txData(4), dev.info().vBatFilt);
         can.send(dev.config().id + Command::Pack5, dev.txData(), CAN_PACK_SIZE);
 
         memset(dev.txData(), 0, CAN_PACK_SIZE);
         Protocol::addFloat(dev.txData(0), dev.info().cBatRest);
-        Protocol::addFloat(dev.txData(3), dev.config().cBatMod);
+        Protocol::add2Bytes(dev.txData(4), dev.config().lifeCycles);
+        Protocol::add2Bytes(dev.txData(6), (int16_t)dev.config().cBatMod);
         can.send(dev.config().id + Command::Pack6, dev.txData(), CAN_PACK_SIZE);
 #endif
     }

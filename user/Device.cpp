@@ -124,7 +124,7 @@ void Device::calculateBatConsumption(float delta_time)
 {
     float drawn_mah = iBat_filt * delta_time * AS_TO_MAH;
     m_info.cBat += drawn_mah; //in mAh
-    m_config.cBatMod += fabs(drawn_mah); //accumulate module of energy
+    m_config.cBatMod += fabs(drawn_mah); //accumulated capacity module, includes sum of both consumed and charged capacity
 
     float vHeatLosses = iBat_filt * m_info.resBat; //Voltage losses on the internal battery resistance
     m_info.eBat += 0.001 * drawn_mah * (vBat_filt + vHeatLosses); //in Wh
@@ -136,9 +136,10 @@ void Device::calculateBatConsumption(float delta_time)
     float tempFactor = getCapTempFactor();
     m_info.cBatRest = m_config.cInitial * tempFactor - m_info.cBat;
 
+    //The life cycle counter should be incremented if the accumulated capacity module two times greater than the real battery capacity
     if (m_config.cBatMod >= m_config.cInitial * tempFactor * 2.0)
     {
-        m_config.cBatMod = 0;
+        m_config.cBatMod = 0; //should be reset to start a new life cycle
         ++m_config.lifeCycles;
     }
 
@@ -231,6 +232,12 @@ void Device::UpdateBattery(timeUs_t currentTimeUs)
 
     m_info.iBatFilt = iBat_filt;
     m_info.vBatFilt = vBat_filt;
+
+    if (tBatFilter.isFirstLoad())
+    {
+        tBatFilter.FilterSetVal(m_info.tempBat.val);
+    }
+    tBat_filt = tBatFilter.FilterApply(m_info.tempBat.val, delta_time, TBATT_LPF_FREQ);
 
     //calculate battery impedance and power consumption
     calculateBatRes(delta_time);
@@ -379,5 +386,5 @@ float Device::IntrpltNewton(float x, const xy_t* xy, uint32_t n)
   */
 float Device::getCapTempFactor()
 {
-    return IntrpltNewton(m_info.tempBat.val, TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t));
+    return IntrpltNewton(tBat_filt, TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t));
 }

@@ -88,7 +88,7 @@ struct config_t{	//write to flash
 
 	uint16_t iBatOffset = 16787;
 
-	//these two variables should be set to 0 remotely in case of brand new battery
+	//these two variables should be set to 0 remotely in case of a brand new battery
     float cBatMod = 0.0; //Module of energy  that important to estimate the battery life cycle
     uint16_t lifeCycles = 0; //life cycles counter that increments when cBatMod two times greater than cInitial
 };
