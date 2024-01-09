@@ -27,10 +27,6 @@ const xy_t Device::TableTempCapacity[] = {
 Device::Device()
 {
 	m_config = m_flash.getConfig();
-	m_info.eBat = 0.0;
-	m_info.cBat = 0.0;
-	m_info.resBat = 0.0;
-	m_info.cBatRest = 0.0;
 }
 
 /**
@@ -211,7 +207,7 @@ void Device::calculateBatRes(float delta_time)
 void Device::UpdateBattery(timeUs_t currentTimeUs)
 {
     iBat = m_info.iBat.val;
-    vBat = m_info.vBat.val; //m_info.vOut.val;
+    vBat = m_info.vBat.val;
 
     // calculate time since last update
     float delta_time = US2S(currentTimeUs - previousTimeUs);

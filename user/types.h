@@ -42,14 +42,14 @@ struct info_t{
 	int16_t pBat;
 	flags_t flags;
 
-	float cBat;   //battery power draw in mAh
-	float eBat;   //battery power draw in Wh
-	float cBatRest; //Energy  that left in the battery
-	float resBat; //battery impedance
-	float vRest;  //voltage with sag removed based on current and resistance estimate in Volt
+	float cBat = 0.0;   //battery power draw in mAh
+	float eBat = 0.0;   //battery power draw in Wh
+	float cBatRest = 0.0; //Energy  that left in the battery
+	float resBat = 0.0; //battery impedance
+	float vRest= 0.0;  //voltage with sag removed based on current and resistance estimate in Volt
 	              //resting voltage, should always be greater or equal to the raw voltage
-	float vBatFilt; //Filtered voltage
-	float iBatFilt; //Filtered current
+	float vBatFilt = 0.0; //Filtered voltage
+	float iBatFilt = 0.0; //Filtered current
 	uint16_t iBatOffset = 0;
 
 	uint8_t fullBatCnt = 0;
@@ -78,7 +78,7 @@ struct config_t{	//write to flash
 	float tempBatK = 1;
 	float tempBatB = 0;
 	uint32_t cInitial = 1300;	//in mAh = 100 Ah
-	uint32_t eInitial = 32500;	//in mWh = 5 kWh
+	uint32_t eInitial = 32760;	//in mWh = 5 kWh (cInitial * 4.2 * 6)
 
 	float vLow = 2.5;	//* 6
 	float vMax = 4.2;	//* 6

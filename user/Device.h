@@ -78,11 +78,12 @@ private:
     //filters
     PT1Filter vBatFilter;
     PT1Filter iBatFilter;
+    PT1Filter tBatFilter;
     float iBat_filt = 0;  // filtered current
     float vBat_filt = 0;  // filtered voltage
+    float tBat_filt = 0;  // filtered temperature
+
     timeUs_t previousTimeUs = 0;  // system time of last resistance estimate update
-    PT1Filter tBatFilter;
-    float tBat_filt = 0; // filtered temperature
 
     static const xy_t TableTempCapacity[];
 

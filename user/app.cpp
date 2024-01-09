@@ -290,8 +290,8 @@ void taskCAN(timeUs_t currentTimeUs)
         can.send(dev.config().id + Command::Pack2, dev.txData(), CAN_PACK_SIZE);
 
         memset(dev.txData(), 0, CAN_PACK_SIZE);
-        Protocol::addFloat(dev.txData(0), dev.info().cBat);
-        Protocol::addFloat(dev.txData(4), dev.info().eBat);
+        Protocol::addFloat(dev.txData(0), dev.info().cBat * -1.0);
+        Protocol::addFloat(dev.txData(4), dev.info().eBat * -1.0);
         can.send(dev.config().id + Command::Pack3, dev.txData(), CAN_PACK_SIZE);
 
 #ifdef DEBUG_ENABLED
@@ -301,7 +301,7 @@ void taskCAN(timeUs_t currentTimeUs)
         can.send(dev.config().id + Command::Pack4, dev.txData(), CAN_PACK_SIZE);
 
         memset(dev.txData(), 0, CAN_PACK_SIZE);
-        Protocol::addFloat(dev.txData(0), dev.info().iBatFilt);
+        Protocol::addFloat(dev.txData(0), dev.info().iBatFilt * -1.0);
         Protocol::addFloat(dev.txData(4), dev.info().vBatFilt);
         can.send(dev.config().id + Command::Pack5, dev.txData(), CAN_PACK_SIZE);
 
