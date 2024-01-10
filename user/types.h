@@ -116,6 +116,14 @@ inline bool is_positive(const float x)
     return (x >= FLT_EPSILON);
 }
 
+/*
+ * @brief: Check whether a float is less than zero
+ */
+inline bool is_negative(const float x)
+{
+    return (x <= (-1.0 * FLT_EPSILON));
+}
+
 // Convert amps milliseconds to milliamp hours
 // Amp.millisec to milliAmp.hour = 1/1E3(ms->s) * 1/3600(s->hr) * 1000(A->mA)
 #define AMS_TO_MAH 0.000277777778f

@@ -19,14 +19,31 @@ const xy_t Device::TableTempCapacity[] = {
         { 40.0 , 0.9 },
         { 45.0 , 0.86}};
 
+// x - life cycles, y - relative capacity from 0.0 to 1.0
+//!!! It's a test table with not real values.
+const xy_t Device::TableLifeCapacity[] = {
+        { 0.0   , 1.0 },
+        { 10.0  , 0.98},
+        { 20.0  , 0.92},
+        { 30.0  , 0.86},
+        { 40.0  , 0.81},
+        { 50.0  , 0.8},
+        { 60.0  , 0.77},
+        { 70.0  , 0.72},
+        { 80.0  , 0.70},
+        { 90.0  , 0.65},
+        { 100.0 , 0.60}};
+
 /**
   * @brief Constructor
   * @param None
   * @retval None
   */
-Device::Device()
+Device::Device(): Newton(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t)), Linear(TableLifeCapacity, sizeof(TableLifeCapacity)/sizeof(xy_t))
 {
 	m_config = m_flash.getConfig();
+	//Newton.Init(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t));
+	//Linear.Init(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t));
 }
 
 /**
@@ -130,10 +147,12 @@ void Device::calculateBatConsumption(float delta_time)
     //temperature range that we need with requested temperature resolution.
     //Suggest temperature step is 1.0 Celsius
     float tempFactor = getCapTempFactor();
-    m_info.cBatRest = m_config.cInitial * tempFactor - m_info.cBat;
+    float lifeFactor = getLifeFactor();
+    float cBatFix =  m_config.cInitial * ( tempFactor + lifeFactor - 1.0);
+    m_info.cBatRest = cBatFix - m_info.cBat;
 
     //The life cycle counter should be incremented if the accumulated capacity module two times greater than the real battery capacity
-    if (m_config.cBatMod >= m_config.cInitial * tempFactor * 2.0)
+    if (m_config.cBatMod >= m_config.cInitial * 2.0)
     {
         m_config.cBatMod = 0; //should be reset to start a new life cycle
         ++m_config.lifeCycles;
@@ -245,136 +264,6 @@ void Device::UpdateBattery(timeUs_t currentTimeUs)
 }
 
 /**
-  * @brief Forward Newton Interpolation method
-  * @param x: x-axis value for which we have to find teh y value
-  *        xy_t: array with (x,y) control points
-  *        n: amount of control points
-  * @retval float: Calculated y value
-  */
-float Device::IntrpltNewtForward(float x, const xy_t *xy, uint32_t n)
-{
-    //Allocat memory for two dimensions array
-    float **y  = new float*[n];
-    for (uint32_t i = 0; i < n; i++)
-    {
-        y[i] = new float[n];
-    }
-
-    //To load allocated array with a f(x) values
-    for (uint32_t i = 0; i < n; i++)
-    {
-        y[i][0] = xy[i].y;
-    }
-
-    //Calculate the forward difference table
-    for (uint32_t i = 1; i < n; i++)
-    {
-        for (uint32_t j = 0; j < n-i; j++)
-        {
-            y[j][i] = y[j+1][i-1] - y[j][i-1];
-        }
-    }
-
-    //Interpolate
-    float sum = y[0][0];
-    float u = (x - xy[0].x) / (xy[1].x - xy[0].x);
-    float p = 1.0;
-    for (uint32_t i = 1; i < n; i++)
-    {
-        p *= (u - i + 1)/i;
-        sum = sum + p * y[0][i];
-    }
-
-    //To free allocated memory
-    for (uint32_t i = 0; i < n; i++) {
-        delete[] y[i];
-    }
-    delete[] y;
-
-    return sum;
-}
-
-/**
-  * @brief Backward Newton Interpolation method
-  * @param x: x-axis value for which we have to find teh y value
-  *        xy_t: array with (x,y) control points
-  *        n: amount of control points
-  * @retval float: Calculated y value
-  */
-float Device::IntrpltNewtBackward(float x, const xy_t* xy, uint32_t n)
-{
-    //Allocat memory for two dimensions array
-    float** y = new float* [n];
-    for (uint32_t i = 0; i < n; i++)
-    {
-        y[i] = new float[n];
-    }
-    //To load allocated array with a f(x) values
-    for (uint32_t i = 0; i < n; i++)
-    {
-        y[i][0] = xy[i].y;
-    }
-
-    //Calculate the backard difference table
-    for (uint32_t i = 1; i < n; i++)
-    {
-        for (uint32_t j = i; j < n; j++)
-        {
-            y[j][i] = y[j][i - 1] - y[j - 1][i - 1];
-        }
-    }
-
-    //Interpolate
-    float sum = y[n-1][0];
-    float u = (x - xy[n-1].x) / (xy[1].x - xy[0].x);
-    float p = 1.0;
-    for (uint32_t i = 1; i < n; i++)
-    {
-        p *= (u + i - 1) / i;
-        sum = sum + p * y[n - 1][i];
-    }
-
-    //To free allocated memory
-    for (uint32_t i = 0; i < n; i++) {
-        delete[] y[i];
-    }
-    delete[] y;
-
-    return sum;
-}
-
-/**
-  * @brief Newton interpolation method
-  * @param x: x-axis value for which we have to find teh y value
-  *        xy_t: array with (x,y) control points
-  *        n: amount of control points
-  * @retval float: Calculated y value
-  */
-float Device::IntrpltNewton(float x, const xy_t* xy, uint32_t n)
-{
-     uint32_t k = 0;
-    while (k < n)
-    {
-        if (x < xy[k].x)
-        {
-            break;
-        }
-        ++k;
-    }
-
-    float result = 0.0;
-    if (k < (n >> 1))
-    {
-        result = IntrpltNewtForward(x, xy, n);
-    }
-    else
-    {
-        result = IntrpltNewtBackward(x, xy, n);
-    }
-    return result;
-}
-
-/**
   * @brief This method returns relative dependence of the battery capacity on the
   *        measured  battery temperature -  from 0.0 to 1.0,
   * @param
@@ -382,5 +271,16 @@ float Device::IntrpltNewton(float x, const xy_t* xy, uint32_t n)
   */
 float Device::getCapTempFactor()
 {
-    return IntrpltNewton(tBat_filt, TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t));
+    return Newton.GetVal(tBat_filt);
+}
+
+/**
+  * @brief This method returns relative dependence of the battery capacity on the
+  *        life cycles amount - from 0.0 to 1.0,
+  * @param
+  * @retval float: factor value from 0.0 to 1.0
+  */
+float Device::getLifeFactor()
+{
+    return Linear.GetVal(m_config.lifeCycles);
 }
