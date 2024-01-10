@@ -4,35 +4,30 @@
 #include "types.h"
 #include "b57861s103.h"
 
+//These tables were built and based on the NCR18650GA characteristics
+
 // x - temperature in Сelsius, y - relative capacity from 0.0 to 1.0
 const xy_t Device::TableTempCapacity[] = {
-        {-10.0 , 0.2 },
-        {-5.0  , 0.38},
-        { 0.0  , 0.5 },
-        { 5.0  , 0.66},
-        { 10.0 , 0.78},
-        { 15.0 , 0.85},
-        { 20.0 , 0.92},
-        { 25.0 , 1.0 },
+        {-10.0 , 0.87 },
+        {-5.0  , 0.89},
+        { 0.0  , 0.91 },
+        { 5.0  , 0.93},
+        { 10.0 , 0.94},
+        { 15.0 , 0.95},
+        { 20.0 , 0.96},
+        { 25.0 , 0.97},
         { 30.0 , 0.98},
-        { 35.0 , 0.94},
-        { 40.0 , 0.9 },
-        { 45.0 , 0.86}};
+        { 35.0 , 0.99}};
 
 // x - life cycles, y - relative capacity from 0.0 to 1.0
-//!!! It's a test table with not real values.
 const xy_t Device::TableLifeCapacity[] = {
-        { 0.0   , 1.0 },
-        { 10.0  , 0.98},
-        { 20.0  , 0.92},
-        { 30.0  , 0.86},
-        { 40.0  , 0.81},
-        { 50.0  , 0.8},
-        { 60.0  , 0.77},
-        { 70.0  , 0.72},
-        { 80.0  , 0.70},
-        { 90.0  , 0.65},
-        { 100.0 , 0.60}};
+        { 0.0    , 1.0 },
+        { 50.0   , 0.92},
+        { 100.0  , 0.82},
+        { 150.0  , 0.80},
+        { 200.0  , 0.76},
+        { 250.0  , 0.74},
+        { 300.0  , 0.69}};
 
 /**
   * @brief Constructor
