@@ -36,9 +36,11 @@ const xy_t Device::TableLifeCapacity[] = {
   */
 Device::Device(): Newton(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t)), Linear(TableLifeCapacity, sizeof(TableLifeCapacity)/sizeof(xy_t))
 {
-	m_config = m_flash.getConfig();
-	//Newton.Init(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t));
-	//Linear.Init(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t));
+    //Newton.Init(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t));
+    //Linear.Init(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t));
+
+	m_config = m_ConfigStore.getConfig();
+	m_energy = m_EnergyStore.readData();
 }
 
 /**
@@ -58,7 +60,17 @@ Device::~Device()
   */
 void Device::saveConfig()
 {
-	m_flash.setConfig(m_config);
+	m_ConfigStore.setConfig(m_config);
+}
+
+/**
+  * @brief
+  * @param None
+  * @retval None
+  */
+void Device::saveEnergy()
+{
+    m_EnergyStore.writeData(&m_energy);
 }
 
 /**
@@ -131,11 +143,11 @@ bool Device::checkVbatVload()
 void Device::calculateBatConsumption(float delta_time)
 {
     float drawn_mah = iBat_filt * delta_time * AS_TO_MAH;
-    m_info.cBat += drawn_mah; //in mAh
-    m_config.cBatMod += fabs(drawn_mah); //accumulated capacity module, includes sum of both consumed and charged capacity
+    m_energy.cBat += drawn_mah; //in mAh
+    m_energy.cBatMod += fabs(drawn_mah); //accumulated capacity module, includes sum of both consumed and charged capacity
 
     float vHeatLosses = iBat_filt * m_info.resBat; //Voltage losses on the internal battery resistance
-    m_info.eBat += 0.001 * drawn_mah * (vBat_filt + vHeatLosses); //in Wh
+    m_energy.eBat += 0.001 * drawn_mah * (vBat_filt + vHeatLosses); //in Wh
 
     //Calculate the rest power in the battery taking to account current temperature and power that was consumed
     //!!! This calculation takes approximately 650us and can be done preliminary in the beginning for whole
@@ -144,23 +156,23 @@ void Device::calculateBatConsumption(float delta_time)
     float tempFactor = getCapTempFactor();
     float lifeFactor = getLifeFactor();
     float cBatFix =  m_config.cInitial * ( tempFactor + lifeFactor - 1.0);
-    m_info.cBatRest = cBatFix - m_info.cBat;
+    m_info.cBatRest = cBatFix - m_energy.cBat;
 
     //The life cycle counter should be incremented if the accumulated capacity module two times greater than the real battery capacity
-    if (m_config.cBatMod >= m_config.cInitial * 2.0)
+    if (m_energy.cBatMod >= m_config.cInitial * 2.0)
     {
-        m_config.cBatMod = 0; //should be reset to start a new life cycle
-        ++m_config.lifeCycles;
+        m_energy.cBatMod = 0; //should be reset to start a new life cycle
+        ++m_energy.lifeCycles;
     }
 
-    if (m_info.eBat > m_config.eInitial)
+    if (m_energy.eBat > m_config.eInitial)
     {
-        m_info.eBat = m_config.eInitial;
+        m_energy.eBat = m_config.eInitial;
     }
 
-    if (m_info.cBat > m_config.cInitial)
+    if (m_energy.cBat > m_config.cInitial)
     {
-        m_info.cBat = m_config.cInitial;
+        m_energy.cBat = m_config.cInitial;
     }
 }
 
@@ -277,5 +289,5 @@ float Device::getCapTempFactor()
   */
 float Device::getLifeFactor()
 {
-    return Linear.GetVal(m_config.lifeCycles);
+    return Linear.GetVal(m_energy.lifeCycles);
 }

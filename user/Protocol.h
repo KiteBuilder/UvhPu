@@ -41,7 +41,7 @@ public:
     static void addFloat(uint8_t* data, float value);
     static void addFlags(uint8_t* data, const flags_t& flags);
 
-    static void parceData(Command cmd, uint8_t* data, config_t& config);
+    static void parceData(Command cmd, uint8_t* data, config_t& config, energy_t& energy);
 };
 
 #endif /* PROTOCOL_H_ */

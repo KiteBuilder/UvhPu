@@ -42,12 +42,10 @@ struct info_t{
 	int16_t pBat;
 	flags_t flags;
 
-	float cBat = 0.0;   //battery power draw in mAh
-	float eBat = 0.0;   //battery power draw in Wh
 	float cBatRest = 0.0; //Energy  that left in the battery
 	float resBat = 0.0; //battery impedance
 	float vRest= 0.0;  //voltage with sag removed based on current and resistance estimate in Volt
-	              //resting voltage, should always be greater or equal to the raw voltage
+	                   //resting voltage, should always be greater or equal to the raw voltage
 	float vBatFilt = 0.0; //Filtered voltage
 	float iBatFilt = 0.0; //Filtered current
 	uint16_t iBatOffset = 0;
@@ -87,11 +85,21 @@ struct config_t{	//write to flash
 	float tempBatMax = 60;
 
 	uint16_t iBatOffset = 16787;
+};
+#pragma pack(pop)
 
-	//these two variables should be set to 0 remotely in case of a brand new battery
+#pragma pack(push,1)
+//this structure size should be multiple of 4 bytes, otherwise add a reserve field
+typedef struct{
+    uint32_t index = 0; //index of structure written to the flash memory. 0 if structure should be written for the first time
+    float cBat = 0.0;   //battery power draw in mAh
+    float eBat = 0.0;   //battery power draw in Wh
+    //these two variables should be set to 0 remotely in case of a brand new battery
     float cBatMod = 0.0; //Module of energy  that important to estimate the battery life cycle
     uint16_t lifeCycles = 0; //life cycles counter that increments when cBatMod two times greater than cInitial
-};
+    uint16_t checksum = 0; //because this structure should be written to flash we need a checksum to check the validity
+    //uint16_t reserve = 0;
+} energy_t;
 #pragma pack(pop)
 
 //*****************************************************************************

@@ -48,7 +48,7 @@ void Protocol::addFlags(uint8_t* data, const flags_t& flags)
 	data[0] = byte;
 }
 
-void Protocol::parceData(Command cmd, uint8_t* data, config_t& config)
+void Protocol::parceData(Command cmd, uint8_t* data, config_t& config, energy_t& energy)
 {
 	switch(cmd){
 
@@ -104,8 +104,10 @@ void Protocol::parceData(Command cmd, uint8_t* data, config_t& config)
 		break;
 
     case Command::ConfNewBat:
-        memcpy(&config.lifeCycles, &data[0], 2);
-        config.cBatMod = 0;
+        memcpy(&energy.lifeCycles, &data[0], 2);
+        energy.cBat = 0;
+        energy.eBat = 0;
+        energy.cBatMod = 0;
         break;
 
 	default: break;

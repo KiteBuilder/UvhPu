@@ -42,7 +42,7 @@
 //ltc
 #define GPIO_PB_EN				GPIOA
 #define PIN_PB_EN				GPIO_PIN_11
-#define FAULT_READ()			HAL_GPIO_ReadPin(GPIO_PB_EN, PIN_PB_EN)
+#define FAULT_READ()			(!HAL_GPIO_ReadPin(GPIO_PB_EN, PIN_PB_EN))
 
 //--------------------------------------------------------------------------------
 //LEDs

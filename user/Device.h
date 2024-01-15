@@ -38,8 +38,10 @@ public:
 
     config_t& config() {return m_config;};
 	info_t& info() {return m_info;};
+	energy_t& energy() {return m_energy;};
 
 	void saveConfig();
+	void saveEnergy();
 	void convertAdcData();
 	bool checkVbatVload();
 	void calculateBatConsumption(float delta_time);
@@ -49,13 +51,15 @@ public:
 	float getLifeFactor();
 
 private:
-	Flash m_flash;
+	ConfigStore m_ConfigStore;
+	EnergyStore m_EnergyStore;
 
 	uint8_t m_txData[CAN_PACK_SIZE] = {0};
 	uint8_t m_rxData[CAN_PACK_SIZE] = {0};
 
 	config_t m_config;
 	info_t m_info;
+	energy_t m_energy;
 
 	const float vRef = 3.0;
 	const float vBias = 1.5;
