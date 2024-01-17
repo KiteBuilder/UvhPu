@@ -108,16 +108,18 @@ void initialization()
 
 	if(dev.checkVbatVload())
 	{
-		if(!(dev.info().iBatOffset >= dev.config().iBatOffset - 5 && dev.info().iBatOffset <= dev.config().iBatOffset + 5))
-		{
-			dev.config().iBatOffset = dev.info().iBatOffset;
-			dev.saveConfig();
-		}
-	}
-	else
-	{
-	    dev.info().flags.faultVbatVLoad = true;
-	}
+	    const int OffsetHyst = 2;
+        bool a = dev.info().iBatOffset >= (dev.config().iBatOffset - OffsetHyst);
+        bool b = dev.info().iBatOffset <= (dev.config().iBatOffset + OffsetHyst);
+        if (!(a && b))
+        {
+            dev.config().iBatOffset = dev.info().iBatOffset;
+            dev.saveConfig();
+        }
+    } else
+    {
+        dev.info().flags.faultVbatVLoad = true;
+    }
 
     BAT_CONNECT(GPIO_PIN_SET);
 

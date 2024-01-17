@@ -17,7 +17,10 @@ const xy_t Device::TableTempCapacity[] = {
         { 20.0 , 0.96},
         { 25.0 , 0.97},
         { 30.0 , 0.98},
-        { 35.0 , 0.99}};
+        { 35.0 , 0.99},
+        { 40.0 , 0.99},
+        { 45.0 , 0.98},
+        { 50.0 , 0.98}};
 
 // x - life cycles, y - relative capacity from 0.0 to 1.0
 const xy_t Device::TableLifeCapacity[] = {

@@ -18,7 +18,7 @@ public:
     void readData8(uint32_t addr, uint8_t *data, uint16_t dataSize);
     void readData32(uint32_t addr, uint32_t *data, uint16_t dataSize);
     void readData16(uint32_t addr, uint16_t *data, uint16_t dataSize);
-    bool erasePageAndWrite(uint32_t addr, uint32_t *data, uint16_t dataSize);
+    bool eraseAndWrite(uint32_t addr, uint32_t *data, uint16_t dataSize);
 
 private:
 };
@@ -26,7 +26,7 @@ private:
 //*****************************************************************************
 //
 //*****************************************************************************
-class ConfigStore : public Flash
+class ConfigStore : private Flash
 {
 public:
     ConfigStore();
@@ -42,7 +42,7 @@ private:
 //*****************************************************************************
 //
 //*****************************************************************************
-class EnergyStore : public Flash
+class EnergyStore : private Flash
 {
 public:
     EnergyStore();

@@ -36,7 +36,7 @@ Flash::~Flash() {
   *        dataSize - buffer size in bytes
   * @retval None
   */
-bool Flash::erasePageAndWrite(uint32_t addr, uint32_t *data, uint16_t dataSize)
+bool Flash::eraseAndWrite(uint32_t addr, uint32_t *data, uint16_t dataSize)
 {
 	FLASH_EraseInitTypeDef EraseInitStruct;
 	uint32_t PAGEError = 0;
@@ -269,7 +269,7 @@ config_t ConfigStore::getConfig()
   */
 void ConfigStore::setConfig(config_t& config)
 {
-    erasePageAndWrite(m_configAddress, (uint32_t*)&config, sizeof(config_t));
+    eraseAndWrite(m_configAddress, (uint32_t*)&config, sizeof(config_t));
 }
 
 //*****************************************************************************
