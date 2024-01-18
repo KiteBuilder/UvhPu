@@ -418,7 +418,7 @@ void taskFAULT_LED(timeUs_t currentTimeUs)
 #define DEBUG_PACK_SIZE 64
 uint8_t debugBuff[DEBUG_PACK_SIZE];
 
-#define PACK_SIZE 9
+#define PACK_SIZE 10
 
 #pragma pack(push, 1)
 typedef union
@@ -467,6 +467,7 @@ void taskDEBUG(timeUs_t currentTimeUs)
     debugPack[6].flt = dev.energy().cBatMod;
     debugPack[7].flt = dev.info().vRest;
     debugPack[8].flt = dev.info().tempBat.val;
+    debugPack[9].flt = dev.energy().lifeCycles;
 
     uint32_t n = 0;
     debugBuff[n++] = DLE;

@@ -9,14 +9,14 @@
 // x - temperature in Сelsius, y - relative capacity from 0.0 to 1.0
 const xy_t Device::TableTempCapacity[] = {
         {-10.0 , 0.87 },
-        {-5.0  , 0.89},
-        { 0.0  , 0.91 },
-        { 5.0  , 0.93},
-        { 10.0 , 0.94},
-        { 15.0 , 0.95},
-        { 20.0 , 0.96},
-        { 25.0 , 0.97},
-        { 30.0 , 0.98},
+        {-5.0  , 0.90},
+        { 0.0  , 0.92 },
+        { 5.0  , 0.94},
+        { 10.0 , 0.96},
+        { 15.0 , 0.97},
+        { 20.0 , 0.98},
+        { 25.0 , 0.99},
+        { 30.0 , 1.0},
         { 35.0 , 0.99},
         { 40.0 , 0.99},
         { 45.0 , 0.98},
@@ -189,10 +189,10 @@ void Device::calculateBatConsumption(float delta_time)
   */
 void Device::calculateBatRes(float delta_time)
 {
-    if (!is_positive(iBat))
+    /*if (!is_positive(iBat))
     {
         return;
-    }
+    }*/
 
     // update maximum current seen since startup and protect against divide by zero
     iBat_max = (iBat_max > iBat) ? iBat_max : iBat;

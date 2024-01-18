@@ -23,7 +23,7 @@
 #define IBATT_LPF_FREQ 0.5 //Hz
 #define TBATT_LPF_FREQ 1.0 //Hz
 
-#define CUR_DIFF 0.05 //minimal difference between not filtered and filtered current
+#define CUR_DIFF 0.1 //minimal difference between not filtered and filtered current
                       //values(in Amps) when impedance calculation is possible
 #define R_RC 0.1 //Tau constant for the impedance  LPF filter
 

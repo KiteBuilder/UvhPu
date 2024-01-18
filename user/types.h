@@ -75,8 +75,8 @@ struct config_t{	//write to flash
 	float iMonB = 0;
 	float tempBatK = 1;
 	float tempBatB = 0;
-	uint32_t cInitial = 3500;	//in mAh = 3.5 Ah
-	uint32_t eInitial = 58800;	//in mWh = 5.9 kWh (cInitial * 4.2 * 4)
+	uint32_t cInitial = 3450;	//in mAh = 3.5 Ah
+	uint32_t eInitial = 57960;	//in mWh = 5.9 kWh (cInitial * 4.2 * 4)
 
 	float vLow = 2.5;	//* 6
 	float vMax = 4.2;	//* 6
