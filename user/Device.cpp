@@ -13,9 +13,9 @@ const xy_t Device::TableTempCapacity[] = {
         { 0.0  , 0.92 },
         { 5.0  , 0.94},
         { 10.0 , 0.96},
-        { 15.0 , 0.97},
-        { 20.0 , 0.98},
-        { 25.0 , 0.99},
+        { 15.0 , 0.98},
+        { 20.0 , 0.99},
+        { 25.0 , 1.0},
         { 30.0 , 1.0},
         { 35.0 , 0.99},
         { 40.0 , 0.99},
@@ -44,6 +44,18 @@ Device::Device(): Newton(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_
 
 	m_config = m_ConfigStore.getConfig();
 	m_energy = m_EnergyStore.readData();
+
+	//if previously was charged more than it was drawn all counters should be reset because
+	//it's logically correct that on the fully charged battery we have to start from the scratch
+	if (is_negative(m_energy.cBat))
+	{
+	    m_energy.cBat = 0;
+	}
+
+    if (is_negative(m_energy.eBat))
+    {
+        m_energy.eBat = 0;
+    }
 }
 
 /**
@@ -159,16 +171,6 @@ void Device::calculateBatConsumption(float delta_time)
         ++m_energy.lifeCycles;
     }
 
-    /*if (m_energy.eBat > m_config.eInitial)
-    {
-        m_energy.eBat = m_config.eInitial;
-    }
-
-    if (m_energy.cBat > m_config.cInitial)
-    {
-        m_energy.cBat = m_config.cInitial;
-    }*/
-
     //Calculate the rest power in the battery taking to account current temperature and power that was consumed
     //!!! This calculation takes approximately 650us and can be done preliminary in the beginning for whole
     //temperature range that we need with requested temperature resolution.
@@ -179,6 +181,16 @@ void Device::calculateBatConsumption(float delta_time)
 
     m_info.cBatRest = (m_config.cInitial * k - m_energy.cBat);
     m_info.eBatRest = (m_config.eInitial * k * 0.001 - m_energy.eBat);
+
+    if (is_negative(m_info.cBatRest))
+    {
+        m_info.cBatRest = 0;
+    }
+
+    if (is_negative(m_info.eBatRest))
+    {
+        m_info.eBatRest = 0;
+    }
 }
 
 /**
@@ -294,5 +306,5 @@ float Device::getCapTempFactor()
   */
 float Device::getLifeFactor()
 {
-    return Linear.GetVal(m_energy.lifeCycles);
+    return Linear.GetValOnInterval(m_energy.lifeCycles);
 }

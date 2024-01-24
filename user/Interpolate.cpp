@@ -315,3 +315,27 @@ float LinearIntrplt::GetVal(float x)
 {
     return x * a1 + a0;
 }
+
+/**
+  * @brief Linear interpolation on the interval
+  * @param x: x-axis value for which we have to find the y value
+  *
+  * @retval float: Calculated y value
+  */
+float LinearIntrplt::GetValOnInterval(float x)
+{
+    float a = 0, b = 0;
+
+    for (uint32_t i = 1; i < n; i++)
+    {
+        if (x >= xy[i - 1].x && x <= xy[i].x)
+        {
+            a = (xy[i].y - xy[i - 1].y) / (xy[i].x - xy[i - 1].x);
+            b = xy[i - 1].y - a * xy[i - 1].x;
+
+            break;
+        }
+    }
+
+    return x * a + b;
+}

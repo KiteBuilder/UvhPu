@@ -50,6 +50,7 @@ public:
 
     void Init(const xy_t *xy_buf, uint32_t n_size);
     float GetVal(float x);
+    float GetValOnInterval(float x);
 
 private:
     const xy_t *xy = NULL; //array with (x,y) control points
