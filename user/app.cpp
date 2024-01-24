@@ -319,9 +319,14 @@ void taskCAN(timeUs_t currentTimeUs)
 
         memset(dev.txData(), 0, CAN_PACK_SIZE);
         Protocol::addFloat(dev.txData(0), dev.info().cBatRest);
-        Protocol::add2Bytes(dev.txData(4), dev.energy().lifeCycles);
-        Protocol::add2Bytes(dev.txData(6), (int16_t)dev.energy().cBatMod);
+        Protocol::addFloat(dev.txData(4), dev.info().eBatRest);
         can.send(dev.config().id + Command::Pack6, dev.txData(), CAN_PACK_SIZE);
+
+        memset(dev.txData(), 0, CAN_PACK_SIZE);
+        Protocol::add2Bytes(dev.txData(0), dev.energy().lifeCycles);
+        Protocol::addFloat(dev.txData(2), dev.energy().cBatMod);
+        Protocol::add2Bytes(dev.txData(6), 0); //reserved
+        can.send(dev.config().id + Command::Pack7, dev.txData(), CAN_PACK_SIZE);
 #endif
     }
 }
@@ -418,7 +423,7 @@ void taskFAULT_LED(timeUs_t currentTimeUs)
 #define DEBUG_PACK_SIZE 64
 uint8_t debugBuff[DEBUG_PACK_SIZE];
 
-#define PACK_SIZE 10
+#define PACK_SIZE 11
 
 #pragma pack(push, 1)
 typedef union
@@ -451,10 +456,10 @@ void taskDEBUG(timeUs_t currentTimeUs)
 
         if (rxByte == 'R')
         {
-            dev.energy().lifeCycles;
+            //dev.energy().lifeCycles;
+            //dev.energy().cBatMod -= fabs(dev.energy().cBat);
             dev.energy().cBat = 0;
             dev.energy().eBat = 0;
-            dev.energy().cBatMod = 0;
         }
     }
 
@@ -468,6 +473,7 @@ void taskDEBUG(timeUs_t currentTimeUs)
     debugPack[7].flt = dev.info().vRest;
     debugPack[8].flt = dev.info().tempBat.val;
     debugPack[9].flt = dev.energy().lifeCycles;
+    debugPack[10].flt = dev.info().eBatRest;
 
     uint32_t n = 0;
     debugBuff[n++] = DLE;

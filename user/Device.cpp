@@ -145,21 +145,12 @@ bool Device::checkVbatVload()
   */
 void Device::calculateBatConsumption(float delta_time)
 {
-    float drawn_mah = iBat_filt * delta_time * AS_TO_MAH;
+    float drawn_mah = iBat * delta_time * AS_TO_MAH;
     m_energy.cBat += drawn_mah; //in mAh
     m_energy.cBatMod += fabs(drawn_mah); //accumulated capacity module, includes sum of both consumed and charged capacity
 
-    float vHeatLosses = iBat_filt * m_info.resBat; //Voltage losses on the internal battery resistance
-    m_energy.eBat += 0.001 * drawn_mah * (vBat_filt + vHeatLosses); //in Wh
-
-    //Calculate the rest power in the battery taking to account current temperature and power that was consumed
-    //!!! This calculation takes approximately 650us and can be done preliminary in the beginning for whole
-    //temperature range that we need with requested temperature resolution.
-    //Suggest temperature step is 1.0 Celsius
-    float tempFactor = getCapTempFactor();
-    float lifeFactor = getLifeFactor();
-    float cBatFix =  m_config.cInitial * ( tempFactor + lifeFactor - 1.0);
-    m_info.cBatRest = cBatFix - m_energy.cBat;
+    float vHeatLosses = iBat * m_info.resBat; //Voltage losses on the internal battery resistance
+    m_energy.eBat += 0.001 * drawn_mah * (vBat + vHeatLosses); //in Wh
 
     //The life cycle counter should be incremented if the accumulated capacity module two times greater than the real battery capacity
     if (m_energy.cBatMod >= m_config.cInitial * 2.0)
@@ -168,7 +159,7 @@ void Device::calculateBatConsumption(float delta_time)
         ++m_energy.lifeCycles;
     }
 
-    if (m_energy.eBat > m_config.eInitial)
+    /*if (m_energy.eBat > m_config.eInitial)
     {
         m_energy.eBat = m_config.eInitial;
     }
@@ -176,7 +167,18 @@ void Device::calculateBatConsumption(float delta_time)
     if (m_energy.cBat > m_config.cInitial)
     {
         m_energy.cBat = m_config.cInitial;
-    }
+    }*/
+
+    //Calculate the rest power in the battery taking to account current temperature and power that was consumed
+    //!!! This calculation takes approximately 650us and can be done preliminary in the beginning for whole
+    //temperature range that we need with requested temperature resolution.
+    //Suggest temperature step is 1.0 Celsius
+    float tempFactor = getCapTempFactor();
+    float lifeFactor = getLifeFactor();
+    float k = (tempFactor + lifeFactor - 1.0);
+
+    m_info.cBatRest = (m_config.cInitial * k - m_energy.cBat);
+    m_info.eBatRest = (m_config.eInitial * k * 0.001 - m_energy.eBat);
 }
 
 /**

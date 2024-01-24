@@ -42,7 +42,8 @@ struct info_t{
 	int16_t pBat;
 	flags_t flags;
 
-	float cBatRest = 0.0; //Energy  that left in the battery
+	float cBatRest = 0.0; //Energy  that left in the battery in mAh
+	float eBatRest = 0.0; //Energy that left in the battery in mWh
 	float resBat = 0.0; //battery impedance
 	float vRest= 0.0;  //voltage with sag removed based on current and resistance estimate in Volt
 	                   //resting voltage, should always be greater or equal to the raw voltage
@@ -76,7 +77,7 @@ struct config_t{	//write to flash
 	float tempBatK = 1;
 	float tempBatB = 0;
 	uint32_t cInitial = 3450;	//in mAh = 3.5 Ah
-	uint32_t eInitial = 57960;	//in mWh = 5.9 kWh (cInitial * 4.2 * 4)
+	uint32_t eInitial = 51060;	//in mWh = 5.8 kWh (cInitial * 3.7 * 4)
 
 	float vLow = 2.5;	//* 6
 	float vMax = 4.2;	//* 6
