@@ -203,30 +203,29 @@ void Device::calculateBatConsumption(float delta_time)
   */
 void Device::calculateBatRes(float delta_time)
 {
-    /*if (!is_positive(iBat))
-    {
-        return;
-    }*/
-
     // update maximum current seen since startup and protect against divide by zero
     iBat_max = (iBat_max > iBat) ? iBat_max : iBat;
     float iBat_delta = iBat - iBat_filt;
 
-    if (is_zero(iBat_delta) || fabsf(iBat_delta) < CUR_DIFF)
+    if (is_zero(iBat_delta) || fabsf(iBat_delta) < CUR_DIFF || is_zero(iBat_max))
     {
         return;
     }
 
     // update reference voltage and current
-    if (vBat > vBat_ref)
+    if (vBat > vBat_ref && is_positive(iBat))
     {
         vBat_ref = vBat;
         iBat_ref = iBat;
     }
 
-    float res_alpha =  R_RC * fabsf(iBat_delta)/ iBat_max;
+    //this code also can be appropriate for the filtering
+    //float RC = 1.0f / (2.0f * M_PI * 0.01f);
+    //float res_alpha =  delta_time / (RC + delta_time);
 
-    float resBat_estimate = (vBat_filt - vBat)/iBat_delta;
+    float res_alpha =  R_RC * fabsf(iBat_delta) / iBat_max;
+
+    float resBat_estimate = (vBat_filt - vBat) / iBat_delta;
 
     if (is_positive(resBat_estimate))
     {
