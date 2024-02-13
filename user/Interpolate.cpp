@@ -216,7 +216,7 @@ float NewtonIntrplt::GetVal(float x)
 {
     if (xy == NULL)
     {
-        return 0;
+        return 1;
     }
 
     uint32_t k = 0;
@@ -325,6 +325,11 @@ float LinearIntrplt::GetVal(float x)
 float LinearIntrplt::GetValOnInterval(float x)
 {
     float a = 0, b = 0;
+
+    if (xy == NULL)
+    {
+        return 1;
+    }
 
     for (uint32_t i = 1; i < n; i++)
     {

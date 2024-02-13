@@ -5,9 +5,9 @@
 #include "b57861s103.h"
 
 //These tables were built and based on the NCR18650GA characteristics
-
+/*
 // x - temperature in Сelsius, y - relative capacity from 0.0 to 1.0
-const xy_t Device::TableTempCapacity[] = {
+xy_t Device::TableTempCapacity[] = {
         {-10.0 , 0.87 },
         {-5.0  , 0.90},
         { 0.0  , 0.92 },
@@ -23,24 +23,44 @@ const xy_t Device::TableTempCapacity[] = {
         { 50.0 , 0.98}};
 
 // x - life cycles, y - relative capacity from 0.0 to 1.0
-const xy_t Device::TableLifeCapacity[] = {
+xy_t Device::TableLifeCapacity[] = {
         { 0.0    , 1.0 },
         { 50.0   , 0.92},
         { 100.0  , 0.82},
         { 150.0  , 0.80},
         { 200.0  , 0.76},
         { 250.0  , 0.74},
-        { 300.0  , 0.69}};
+        { 300.0  , 0.69}};*/
 
 /**
   * @brief Constructor
   * @param None
   * @retval None
   */
-Device::Device(): Newton(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t)), Linear(TableLifeCapacity, sizeof(TableLifeCapacity)/sizeof(xy_t))
+Device::Device() //: Newton(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t)), Linear(TableLifeCapacity, sizeof(TableLifeCapacity)/sizeof(xy_t))
 {
-    //Newton.Init(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t));
-    //Linear.Init(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(xy_t));
+
+    //Next code is necessary to fill tables with valid preliminary values and store them on the flash memory side
+    /*
+    tables[0].size = sizeof(TableTempCapacity)/sizeof(xy_t);
+    tables[0].pTable = TableTempCapacity;
+
+    tables[1].size = sizeof(TableLifeCapacity)/sizeof(xy_t);
+    tables[1].pTable = TableLifeCapacity;
+
+    m_TablesStore.writeData(tables, NUM_OF_TABLES);*/
+
+    m_TablesStore.readData(tables, NUM_OF_TABLES);
+
+    if (tables[0].validity == true)
+    {
+        Newton.Init(tables[0].pTable, tables[0].size);
+    }
+
+    if (tables[1].validity == true)
+    {
+        Linear.Init(tables[1].pTable, tables[1].size);
+    }
 
 	m_config = m_ConfigStore.getConfig();
 	m_energy = m_EnergyStore.readData();
@@ -165,6 +185,7 @@ void Device::calculateBatConsumption(float delta_time)
     m_energy.eBat += 0.001 * drawn_mah * (vBat + vHeatLosses); //in Wh
 
     //The life cycle counter should be incremented if the accumulated capacity module two times greater than the real battery capacity
+
     if (m_energy.cBatMod >= m_config.cInitial * 2.0)
     {
         m_energy.cBatMod = 0; //should be reset to start a new life cycle
@@ -175,8 +196,14 @@ void Device::calculateBatConsumption(float delta_time)
     //!!! This calculation takes approximately 650us and can be done preliminary in the beginning for whole
     //temperature range that we need with requested temperature resolution.
     //Suggest temperature step is 1.0 Celsius
-    float tempFactor = getCapTempFactor();
-    float lifeFactor = getLifeFactor();
+
+    if (tables[0].validity == true)
+    {
+        Newton.Init(tables[0].pTable, tables[0].size);
+    }
+
+    float tempFactor = (tables[0].validity == true) ? getCapTempFactor() : 1.0;
+    float lifeFactor = (tables[1].validity == true) ? getLifeFactor() : 1.0;
     float k = (tempFactor + lifeFactor - 1.0);
 
     m_info.cBatRest = (m_config.cInitial * k - m_energy.cBat);

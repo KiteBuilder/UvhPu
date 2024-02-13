@@ -59,4 +59,20 @@ private:
     uint16_t getXorChecksum(energy_t *p_energy);
 };
 
+//*****************************************************************************
+//
+//*****************************************************************************
+class TablesStore : private Flash
+{
+public:
+    TablesStore();
+    virtual ~TablesStore();
+
+    void readData(table_t *tables, uint8_t numOfTables);
+    void writeData(table_t *tables, uint8_t numOfTables);
+
+private:
+    static const uint32_t m_tablesAddress = 0x0803D000;
+};
+
 #endif /* FLASH_H_ */

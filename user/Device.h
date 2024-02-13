@@ -27,6 +27,8 @@
                       //values(in Amps) when impedance calculation is possible
 #define R_RC 0.1 //Tau constant for the impedance LPF filter
 
+#define NUM_OF_TABLES 2 //number of tables for capacity correction algorithm
+
 class Device {
 
 public:
@@ -39,6 +41,7 @@ public:
     config_t& config() {return m_config;};
 	info_t& info() {return m_info;};
 	energy_t& energy() {return m_energy;};
+	table_t& table(uint32_t index) {return tables[index];}
 
 	void saveConfig();
 	void saveEnergy();
@@ -53,6 +56,7 @@ public:
 private:
 	ConfigStore m_ConfigStore;
 	EnergyStore m_EnergyStore;
+	TablesStore m_TablesStore;
 
 	uint8_t m_txData[CAN_PACK_SIZE] = {0};
 	uint8_t m_rxData[CAN_PACK_SIZE] = {0};
@@ -83,8 +87,12 @@ private:
 
     timeUs_t previousTimeUs = 0;  // system time of last resistance estimate update
 
-    static const xy_t TableTempCapacity[];
-    static const xy_t TableLifeCapacity[];
+    table_t tables[NUM_OF_TABLES]; //[0] capacity from the temperature dependency table
+                                   //[1] capacity from the life cycle dependency table
+
+    //static xy_t TableTempCapacity[];
+    //static xy_t TableLifeCapacity[];
+
     NewtonIntrplt Newton;
     LinearIntrplt Linear;
 };

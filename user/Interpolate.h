@@ -3,14 +3,7 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-
-#pragma pack(push, 1)
-typedef struct
-{
-    float x;
-    float y;
-} xy_t;
-#pragma pack(pop)
+#include "types.h"
 
 class NewtonIntrplt {
 public:

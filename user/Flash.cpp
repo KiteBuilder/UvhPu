@@ -392,3 +392,73 @@ uint16_t EnergyStore::getXorChecksum(energy_t *energy)
 
     return checksum;
 }
+
+//*****************************************************************************
+//Tables storage class
+//*****************************************************************************
+/**
+  * @brief Constructor
+  * @param None
+  * @retval None
+  */
+TablesStore::TablesStore(){
+
+}
+
+/**
+  * @brief Destructor
+  * @param None
+  * @retval None
+  */
+TablesStore::~TablesStore() {
+
+}
+
+/**
+  * @brief Get tables from the NOR Flash memory
+  * @param None
+  * @retval None
+  */
+void TablesStore::readData(table_t *tables, uint8_t numOfTables)
+{
+    uint32_t address = m_tablesAddress;
+
+    for (uint32_t i = 0; i < numOfTables; i++)
+    {
+        readData32(address, &tables[i].size, 1);
+        if (tables[i].size != 0xFFFFFFFF && tables[i].size != 0)
+        {
+            if (tables[i].pTable != NULL)
+            {
+                delete[] tables[i].pTable;
+            }
+
+            tables[i].pTable = new xy_t[tables[i].size];
+
+            address += 4;
+            readData32(address, (uint32_t*)tables[i].pTable, tables[i].size * 2);
+            address += tables[i].size * 8;
+
+            tables[i].validity = true;
+        }
+    }
+}
+
+/**
+  * @brief Save config to the NOR Flash
+  * @param config_t type referenced variable
+  * @retval None
+  */
+void TablesStore::writeData(table_t *tables, uint8_t numOfTables)
+{
+    uint32_t address = m_tablesAddress;
+    erasePages(address, 1, NULL);
+
+    for (uint32_t i = 0; i < numOfTables; i++)
+    {
+        writeData32(address, &tables[i].size, 1);
+        address += 4;
+        writeData32(address, (uint32_t*)tables[i].pTable, tables[i].size * 2);
+        address += tables[i].size * 8;
+    }
+}

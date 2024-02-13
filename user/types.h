@@ -103,6 +103,18 @@ typedef struct{
 } energy_t;
 #pragma pack(pop)
 
+typedef struct
+{
+    float x;
+    float y;
+} xy_t;
+
+typedef struct {
+    uint32_t size = 0; //table size
+    xy_t *pTable = NULL; //pointer to the table
+    bool validity = false; //true if table is valid, otherwise set to false
+} table_t;
+
 //*****************************************************************************
 //Here located float primitives
 //*****************************************************************************
