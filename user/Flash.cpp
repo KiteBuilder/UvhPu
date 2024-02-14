@@ -431,6 +431,7 @@ void TablesStore::readData(table_t *tables, uint8_t numOfTables)
             if (tables[i].pTable != NULL)
             {
                 delete[] tables[i].pTable;
+                tables[i].pTable = NULL;
             }
 
             tables[i].pTable = new xy_t[tables[i].size];

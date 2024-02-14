@@ -33,6 +33,9 @@ void taskFAULT(timeUs_t);
 void taskFAULT_LED(timeUs_t);
 void taskDEBUG(timeUs_t);
 
+#define NEW_TABLE_SIGNATURE 0x55AA55AA
+static void LoadTables(uint8_t *data, table_t *tables);
+
 //Task array, consists of all scheduled tasks
 task_t tasks[TASK_COUNT] = {
         [TASK_STROBE] = {
@@ -167,6 +170,7 @@ void exec()
 }
 
 //----------------------Callback--------------------------
+
 /**
   * @brief
   * @param None
@@ -190,6 +194,14 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 	{
 		dev.saveConfig();
 	}
+	else if (cmd == Command::ConfSaveTable)
+	{
+	    dev.saveTables();
+	}
+	else if (cmd == Command::ConfLoadTables)
+	{
+	    LoadTables(dev.rxData(), dev.getTables());
+	}
 	else
 	{
 	    uint8_t fTelemetry = dev.config().fTelemetry;
@@ -198,7 +210,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 		{
 		    taskQueue.reschedule(TASK_CAN, TASK_PERIOD_HZ(dev.config().fTelemetry));
 		}
-
 	}
 }
 
@@ -532,3 +543,55 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 }
 
 #endif
+
+/**
+  * @brief Re-load approximation tables
+  *        CAN packet header consists of  (MSB)|SS|II|00|00|55|AA|55|AA|(LSB)
+  *        SS - array size in bytes
+  *        II - array index
+  *        CAN data packets consist of (MSB)|XXXXXXX|YYYYYYYY|(LSB)
+  * @param data: pointer to received CAN data
+  *        tables: pointer to the tables array
+  * @retval None
+  */
+static void LoadTables(uint8_t *data, table_t *tables)
+{
+    static uint16_t n = 0;
+    static uint16_t i = 0;
+
+    if (*((uint32_t*)&data[0]) == NEW_TABLE_SIGNATURE)
+    {
+        n = data[6];
+        if (n < NUM_OF_TABLES)
+        {
+            tables[n].size = data[7];
+
+            if (tables[n].pTable != NULL)
+            {
+                delete[] tables[n].pTable;
+                tables[n].pTable = NULL;
+            }
+
+            tables[n].pTable = new xy_t[tables[n].size];
+            tables[n].validity = false;
+        }
+        else
+        {
+            n = 0;
+        }
+    }
+    else
+    {
+        if (tables[n].pTable != NULL && tables[n].validity == false)
+        {
+            memcpy(&tables[n].pTable[i].x, &data[0], 4);
+            memcpy(&tables[n].pTable[i].y, &data[4], 4);
+
+            if (++i == tables[n].size)
+            {
+                tables[n].validity = true;
+                i = 0;
+            }
+        }
+    }
+}

@@ -50,6 +50,7 @@ Device::Device() //: Newton(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(
 
     m_TablesStore.writeData(tables, NUM_OF_TABLES);*/
 
+
     m_TablesStore.readData(tables, NUM_OF_TABLES);
 
     if (tables[0].validity == true)
@@ -106,6 +107,16 @@ void Device::saveConfig()
 void Device::saveEnergy()
 {
     m_EnergyStore.writeData(&m_energy);
+}
+
+/**
+  * @brief
+  * @param None
+  * @retval None
+  */
+void Device::saveTables()
+{
+    m_TablesStore.writeData(tables, NUM_OF_TABLES);
 }
 
 /**

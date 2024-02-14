@@ -41,10 +41,11 @@ public:
     config_t& config() {return m_config;};
 	info_t& info() {return m_info;};
 	energy_t& energy() {return m_energy;};
-	table_t& table(uint32_t index) {return tables[index];}
+	table_t* getTables() {return tables;}
 
 	void saveConfig();
 	void saveEnergy();
+    void saveTables();
 	void convertAdcData();
 	bool checkVbatVload();
 	void calculateBatConsumption(float delta_time);

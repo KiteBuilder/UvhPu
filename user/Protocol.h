@@ -28,6 +28,8 @@ enum Command : uint8_t {
 	ConfECinit = 0x1A,
 	Conf1 = 0x1B,
 	ConfNewBat = 0x1C,
+    ConfLoadTables = 0x1D,
+    ConfSaveTable = 0x1E,
 };
 
 class Protocol {
