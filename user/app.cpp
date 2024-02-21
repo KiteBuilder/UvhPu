@@ -549,7 +549,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   *        CAN packet header consists of  (MSB)|SS|II|00|00|55|AA|55|AA|(LSB)
   *        SS - array size in bytes
   *        II - array index
-  *        CAN data packets consist of (MSB)|XXXXXXX|YYYYYYYY|(LSB)
+  *        CAN data packets consist of (MSB)|YYYYYYYY|XXXXXXX|(LSB)
   * @param data: pointer to received CAN data
   *        tables: pointer to the tables array
   * @retval None

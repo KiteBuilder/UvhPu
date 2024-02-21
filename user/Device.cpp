@@ -5,7 +5,7 @@
 #include "b57861s103.h"
 
 //These tables were built and based on the NCR18650GA characteristics
-/*
+
 // x - temperature in Сelsius, y - relative capacity from 0.0 to 1.0
 xy_t Device::TableTempCapacity[] = {
         {-10.0 , 0.87 },
@@ -30,7 +30,7 @@ xy_t Device::TableLifeCapacity[] = {
         { 150.0  , 0.80},
         { 200.0  , 0.76},
         { 250.0  , 0.74},
-        { 300.0  , 0.69}};*/
+        { 300.0  , 0.69}};
 
 /**
   * @brief Constructor
@@ -57,9 +57,40 @@ Device::Device() //: Newton(TableTempCapacity, sizeof(TableTempCapacity)/sizeof(
     {
         Newton.Init(tables[0].pTable, tables[0].size);
     }
+    else //NOTE: this "else" code was added for debug purposes
+    {
+        if (tables[0].pTable != NULL)
+        {
+            delete[] tables[0].pTable;
+            tables[0].pTable = NULL;
+        }
+
+        tables[0].size = sizeof(TableTempCapacity)/sizeof(xy_t);
+        tables[0].pTable = new xy_t[tables[0].size];
+        memcpy(tables[0].pTable, TableTempCapacity, sizeof(TableTempCapacity));
+        tables[0].validity = true;
+
+        Newton.Init(tables[0].pTable, tables[0].size);
+    }
+
 
     if (tables[1].validity == true)
     {
+        Linear.Init(tables[1].pTable, tables[1].size);
+    }
+    else //NOTE: this "else" code was added for debug purposes
+    {
+        if (tables[1].pTable != NULL)
+        {
+            delete[] tables[1].pTable;
+            tables[1].pTable = NULL;
+        }
+
+        tables[1].size = sizeof(TableLifeCapacity)/sizeof(xy_t);
+        tables[1].pTable = new xy_t[tables[1].size];
+        memcpy(tables[1].pTable, TableLifeCapacity, sizeof(TableLifeCapacity));
+        tables[1].validity = true;
+
         Linear.Init(tables[1].pTable, tables[1].size);
     }
 

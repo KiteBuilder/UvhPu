@@ -91,8 +91,8 @@ private:
     table_t tables[NUM_OF_TABLES]; //[0] capacity from the temperature dependency table
                                    //[1] capacity from the life cycle dependency table
 
-    //static xy_t TableTempCapacity[];
-    //static xy_t TableLifeCapacity[];
+    static xy_t TableTempCapacity[];
+    static xy_t TableLifeCapacity[];
 
     NewtonIntrplt Newton;
     LinearIntrplt Linear;
